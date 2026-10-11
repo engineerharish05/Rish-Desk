@@ -172,8 +172,8 @@ private fun DrawerActionButton(label: String, onClick: () -> Unit) {
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White.copy(alpha = 0.14f))
             .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 10.dp)
             .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
+            .padding(horizontal = 10.dp, vertical = 10.dp)
             .semantics { contentDescription = label },
         contentAlignment = Alignment.Center,
     ) {
