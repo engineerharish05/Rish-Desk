@@ -171,13 +171,10 @@ private fun DrawerActionButton(label: String, onClick: () -> Unit) {
         Modifier
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White.copy(alpha = 0.14f))
-            .clickable(onClick = onClick)
+            .clickable(role = Role.Button, onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 10.dp)
             .defaultMinSize(minHeight = 48.dp)
-            .semantics {
-                role = Role.Button
-                contentDescription = label
-            },
+            .semantics { contentDescription = label },
         contentAlignment = Alignment.Center,
     ) {
         Text(label, color = Color.White, fontSize = 12.sp, maxLines = 1)
