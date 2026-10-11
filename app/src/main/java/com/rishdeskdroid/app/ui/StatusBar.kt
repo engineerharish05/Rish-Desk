@@ -2,6 +2,7 @@ package com.rishdeskdroid.app.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -24,6 +25,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,7 +52,15 @@ fun rememberStatus(): StatusState {
  * network signal and battery on the right. Bluetooth, Wi-Fi and signal only show when available.
  */
 @Composable
-fun StatusBar(status: StatusState, opacity: Float, modifier: Modifier = Modifier) {
+fun StatusBar(
+    status: StatusState,
+    opacity: Float,
+    showDate: Boolean,
+    onWifiClick: () -> Unit,
+    onBluetoothClick: () -> Unit,
+    onBatteryClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val background = Color(0xFF0E1028).copy(alpha = 0.18f + 0.23f * opacity.coerceIn(0f, 1f))
     Row(
         modifier
@@ -77,6 +88,14 @@ fun StatusBar(status: StatusState, opacity: Float, modifier: Modifier = Modifier
             )
         }
         Text(status.time, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        if (showDate && status.date.isNotBlank()) {
+            Text(
+                status.date,
+                color = Color.White.copy(alpha = 0.85f),
+                fontSize = 12.sp,
+                modifier = Modifier.padding(start = 10.dp),
+            )
+        }
 
         Spacer(Modifier.weight(1f))
 
@@ -84,10 +103,25 @@ fun StatusBar(status: StatusState, opacity: Float, modifier: Modifier = Modifier
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (status.bluetoothOn) SvgIcon(Ico.bluetooth, 13.dp, strokeWidth = 2.2f)
-            if (status.wifiOn) SvgIcon(Ico.wifi, 15.dp, strokeWidth = 2.2f)
+            if (status.bluetoothOn) {
+                Box(
+                    Modifier
+                        .clickable(onClick = onBluetoothClick)
+                        .semantics { contentDescription = "Bluetooth on. Open Bluetooth settings" },
+                ) { SvgIcon(Ico.bluetooth, 13.dp, strokeWidth = 2.2f) }
+            }
+            if (status.wifiOn) {
+                Box(
+                    Modifier
+                        .clickable(onClick = onWifiClick)
+                        .semantics { contentDescription = "Wi-Fi connected. Open Wi-Fi settings" },
+                ) { SvgIcon(Ico.wifi, 15.dp, strokeWidth = 2.2f) }
+            }
             if (status.hasCellular) SignalBars(status.signalLevel)
             Row(
+                Modifier
+                    .clickable(onClick = onBatteryClick)
+                    .semantics { contentDescription = "Battery ${status.batteryPercent} percent. Open battery settings" },
                 horizontalArrangement = Arrangement.spacedBy(5.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {

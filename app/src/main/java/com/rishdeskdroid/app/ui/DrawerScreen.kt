@@ -1,200 +1,314 @@
 package com.rishdeskdroid.app.ui
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rishdeskdroid.app.data.AddToHomeResult
 import com.rishdeskdroid.app.data.AppInfo
+import com.rishdeskdroid.app.data.DrawerFilter
 import com.rishdeskdroid.app.data.LauncherPrefs
+import com.rishdeskdroid.app.data.RecentStore
+import com.rishdeskdroid.app.data.SortMode
 import com.rishdeskdroid.app.data.addToDock
 import com.rishdeskdroid.app.data.addToHome
+import com.rishdeskdroid.app.data.canHide
+import com.rishdeskdroid.app.data.dockApps
+import com.rishdeskdroid.app.data.drawerApps
 import com.rishdeskdroid.app.data.launchApp
-import com.rishdeskdroid.app.data.filterAndSortApps
 import com.rishdeskdroid.app.data.openAppInfo
+import com.rishdeskdroid.app.data.removeFromDock
 import com.rishdeskdroid.app.data.uninstallApp
-
-private const val COLUMNS = 5
-private const val ROWS = 3
-private const val PER_PAGE = COLUMNS * ROWS
+import androidx.compose.runtime.withFrameNanos
 
 /**
- * The app drawer supports live search, persistent sorting, favorites, and reversible hiding.
- * Long-press an app to manage it; hidden apps remain installed and can be restored with Show hidden.
+ * The app drawer: search, filters (All / Favorites / Recent), sort order, and a paged grid whose
+ * size comes from Settings. Tap empty space (or press back) to close it.
  */
 @Composable
 fun DrawerScreen(
     prefs: LauncherPrefs,
     apps: List<AppInfo>,
+    focusSearch: Boolean,
+    onSearchFocusHandled: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var query by remember { mutableStateOf("") }
-    var showHidden by remember { mutableStateOf(false) }
-    var showSortMenu by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    var query by rememberSaveable { mutableStateOf("") }
+    var filterIndex by rememberSaveable { mutableStateOf(0) }
+    val filter = DrawerFilter.entries[filterIndex.coerceIn(0, DrawerFilter.entries.size - 1)]
+    val focusRequester = remember { FocusRequester() }
 
-    val visibleApps = remember(apps, query, showHidden, prefs.hiddenPackages, prefs.favoritePackages, prefs.appSort) {
-        filterAndSortApps(
-            apps = apps,
-            query = query,
-            hiddenPackages = prefs.hiddenPackages,
-            showHidden = showHidden,
-            favoritePackages = prefs.favoritePackages,
-            sort = prefs.appSort,
-        )
+    val columns = prefs.drawerColumns
+    val rows = prefs.drawerRows
+    val perPage = columns * rows
+
+    val list = remember(apps, query, filter, prefs.sortMode, prefs.hiddenApps, prefs.favorites, RecentStore.recents) {
+        drawerApps(prefs, apps, filter, query)
     }
-    val pages = remember(visibleApps) {
-        val chunks = visibleApps.chunked(PER_PAGE)
-        if (chunks.isEmpty()) listOf(emptyList<AppInfo>()) else chunks
+    val pages = remember(list, perPage) { list.chunked(perPage) }
+    val pagerState = rememberPagerState(pageCount = { maxOf(1, pages.size) })
+
+    // Back clears the search first, then closes the drawer
+    BackHandler(enabled = query.isNotEmpty()) {
+        query = ""
+        focusManager.clearFocus()
     }
-    val pagerState = rememberPagerState(pageCount = { pages.size })
+
+    LaunchedEffect(query, filterIndex, prefs.sortMode) { pagerState.scrollToPage(0) }
+
+    LaunchedEffect(focusSearch) {
+        if (focusSearch) {
+            withFrameNanos { }
+            try {
+                focusRequester.requestFocus()
+            } catch (e: Exception) {
+                // The field was not on screen yet; the user can tap it
+            }
+            onSearchFocusHandled()
+        }
+    }
 
     Column(
         modifier
             .fillMaxSize()
-            .padding(horizontal = 22.dp, vertical = 8.dp),
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClickLabel = "Close app drawer",
+                onClick = onClose,
+            ),
     ) {
-        Row(
+        DrawerHeader(
+            prefs = prefs,
+            query = query,
+            onQueryChange = { query = it },
+            filter = filter,
+            onFilter = { filterIndex = it.ordinal },
+            focusRequester = focusRequester,
+            onSubmit = {
+                // Enter launches the best match
+                val first = list.firstOrNull()
+                if (query.isNotBlank() && first != null) {
+                    launchApp(context, first)
+                    query = ""
+                }
+                focusManager.clearFocus()
+            },
+        )
+        HorizontalPager(
+            state = pagerState,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Box(
-                Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color.White.copy(alpha = 0.14f))
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
-            ) {
-                if (query.isEmpty()) {
-                    Text("Search apps", color = Color.White.copy(alpha = 0.62f), fontSize = 14.sp)
-                }
-                BasicTextField(
-                    value = query,
-                    onValueChange = { query = it },
-                    singleLine = true,
-                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 14.sp),
-                    modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Search applications" },
-                )
+                .weight(1f)
+                .fillMaxWidth(),
+        ) { page ->
+            if (list.isEmpty()) {
+                EmptyDrawer(query, filter, apps.isEmpty())
+            } else {
+                AppPage(prefs, apps, pages.getOrNull(page).orEmpty(), columns, rows)
             }
-            Box {
-                DrawerActionButton(
-                    label = when (prefs.appSort) {
-                        LauncherPrefs.SORT_NAME_DESC -> "Z–A"
-                        LauncherPrefs.SORT_FAVORITES -> "★"
-                        else -> "A–Z"
-                    },
-                    onClick = { showSortMenu = true },
-                )
-                DropdownMenu(expanded = showSortMenu, onDismissRequest = { showSortMenu = false }) {
-                    DropdownMenuItem(text = { Text("Name: A–Z") }, onClick = {
-                        prefs.updateAppSort(LauncherPrefs.SORT_NAME_ASC); showSortMenu = false
-                    })
-                    DropdownMenuItem(text = { Text("Name: Z–A") }, onClick = {
-                        prefs.updateAppSort(LauncherPrefs.SORT_NAME_DESC); showSortMenu = false
-                    })
-                    DropdownMenuItem(text = { Text("Favorites first") }, onClick = {
-                        prefs.updateAppSort(LauncherPrefs.SORT_FAVORITES); showSortMenu = false
-                    })
-                }
-            }
-            DrawerActionButton(
-                label = if (showHidden) "Hide hidden" else "Show hidden",
-                onClick = { showHidden = !showHidden },
-            )
         }
-
-        if (visibleApps.isEmpty()) {
-            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text(
-                    if (query.isNotBlank()) "No apps found for “$query”"
-                    else if (showHidden) "No hidden apps"
-                    else "No apps available",
-                    color = Color.White.copy(alpha = 0.78f),
-                    fontSize = 15.sp,
-                )
-            }
-        } else {
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.weight(1f).fillMaxWidth(),
-            ) { page ->
-                AppPage(prefs, apps, pages[page], showHidden)
-            }
-            PageDots(count = pages.size, current = pagerState.currentPage)
-        }
+        if (pages.size > 1) PageDots(count = pages.size, current = pagerState.currentPage)
     }
 }
 
 @Composable
-private fun DrawerActionButton(label: String, onClick: () -> Unit) {
-    Box(
+private fun DrawerHeader(
+    prefs: LauncherPrefs,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    filter: DrawerFilter,
+    onFilter: (DrawerFilter) -> Unit,
+    focusRequester: FocusRequester,
+    onSubmit: () -> Unit,
+) {
+    Row(
         Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color.White.copy(alpha = 0.14f))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 10.dp),
-        contentAlignment = Alignment.Center,
+            .fillMaxWidth()
+            .padding(horizontal = 28.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Text(label, color = Color.White, fontSize = 12.sp, maxLines = 1)
-    }
-}
-
-@Composable
-private fun AppPage(prefs: LauncherPrefs, allApps: List<AppInfo>, items: List<AppInfo>, showHidden: Boolean) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-    ) {
-        for (row in 0 until ROWS) {
-            Row(
-                Modifier.weight(1f).fillMaxWidth(),
-            ) {
-                for (col in 0 until COLUMNS) {
-                    val app = items.getOrNull(row * COLUMNS + col)
+        GlassTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            placeholder = "Search apps",
+            modifier = Modifier.weight(1f),
+            focusRequester = focusRequester,
+            imeAction = ImeAction.Search,
+            onAction = onSubmit,
+            trailing = if (query.isNotEmpty()) {
+                @Composable {
                     Box(
-                        Modifier.weight(1f).fillMaxHeight(),
+                        Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .clickable(role = Role.Button) { onQueryChange("") }
+                            .semantics { contentDescription = "Clear search" },
                         contentAlignment = Alignment.Center,
                     ) {
-                        if (app != null) DrawerApp(prefs, allApps, app, showHidden)
+                        SvgIcon(Ico.close, 16.dp, strokeWidth = 2.4f)
+                    }
+                }
+            } else {
+                null
+            },
+        )
+        Row(
+            Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            DrawerFilter.entries.forEach { option ->
+                Chip(option.label, selected = option == filter) { onFilter(option) }
+            }
+            SortChip(prefs)
+        }
+    }
+}
+
+@Composable
+private fun Chip(text: String, selected: Boolean, onClick: () -> Unit) {
+    val accent = LocalAccent.current
+    val shape = RoundedCornerShape(18.dp)
+    Box(
+        Modifier
+            .heightIn(min = 44.dp)
+            .clip(shape)
+            .background(if (selected) accent else Color.White.copy(alpha = 0.16f))
+            .border(1.dp, Color.White.copy(alpha = if (selected) 0f else 0.34f), shape)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 14.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+    }
+}
+
+@Composable
+private fun SortChip(prefs: LauncherPrefs) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        Chip("Sort: ${prefs.sortMode.label}", selected = false) { open = true }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            SortMode.entries.forEach { mode ->
+                DropdownMenuItem(
+                    text = { Text(if (mode == prefs.sortMode) "✓ ${mode.label}" else mode.label) },
+                    onClick = {
+                        open = false
+                        prefs.updateSortMode(mode)
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyDrawer(query: String, filter: DrawerFilter, noApps: Boolean) {
+    val message = when {
+        query.isNotBlank() -> "No apps match \"${query.trim()}\""
+        filter == DrawerFilter.FAVORITES -> "No favorites yet. Long-press an app and choose Add to favorites."
+        filter == DrawerFilter.RECENT -> "Apps you open from the launcher will appear here."
+        noApps -> "No apps found"
+        else -> "All apps are hidden. Restore them in Settings."
+    }
+    Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+        Text(
+            message,
+            color = Color.White,
+            fontSize = 16.sp,
+            textAlign = TextAlign.Center,
+            style = LabelStyle,
+        )
+    }
+}
+
+@Composable
+private fun AppPage(
+    prefs: LauncherPrefs,
+    allApps: List<AppInfo>,
+    items: List<AppInfo>,
+    columns: Int,
+    rows: Int,
+) {
+    BoxWithConstraints(
+        Modifier
+            .fillMaxSize()
+            .padding(horizontal = 28.dp, vertical = 4.dp),
+    ) {
+        val cellHeight = maxHeight / rows
+        val labelSpace = if (prefs.showDrawerLabels) 24.dp else 8.dp
+        val icon = (54.dp * prefs.drawerIconScale).coerceAtMost(cellHeight - labelSpace).coerceAtLeast(24.dp)
+        Column(Modifier.fillMaxSize()) {
+            for (row in 0 until rows) {
+                Row(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                ) {
+                    for (col in 0 until columns) {
+                        val app = items.getOrNull(row * columns + col)
+                        Box(
+                            Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (app != null) DrawerApp(prefs, allApps, app, icon)
+                        }
                     }
                 }
             }
@@ -204,17 +318,23 @@ private fun AppPage(prefs: LauncherPrefs, allApps: List<AppInfo>, items: List<Ap
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun DrawerApp(prefs: LauncherPrefs, allApps: List<AppInfo>, app: AppInfo, showHidden: Boolean) {
+private fun DrawerApp(prefs: LauncherPrefs, allApps: List<AppInfo>, app: AppInfo, iconSize: Dp) {
     val context = LocalContext.current
+    val accent = LocalAccent.current
     var menu by remember { mutableStateOf(false) }
+    var confirmUninstall by remember { mutableStateOf(false) }
+    var focused by remember { mutableStateOf(false) }
     val source = remember { MutableInteractionSource() }
-    val favorite = app.packageName in prefs.favoritePackages
-    val hidden = app.packageName in prefs.hiddenPackages
+    val isFavorite = app.packageName in prefs.favorites
+    val inDock = dockApps(prefs, allApps).any { it.packageName == app.packageName }
+    val focusShape = RoundedCornerShape(14.dp)
 
     Box {
         Column(
             Modifier
                 .pressScale(source, 1.07f)
+                .onFocusChanged { focused = it.isFocused }
+                .then(if (focused) Modifier.border(2.dp, accent, focusShape) else Modifier)
                 .combinedClickable(
                     interactionSource = source,
                     indication = null,
@@ -226,35 +346,21 @@ private fun DrawerApp(prefs: LauncherPrefs, allApps: List<AppInfo>, app: AppInfo
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Box(contentAlignment = Alignment.TopEnd) {
-                AppIconImage(app, 54.dp)
-                if (favorite) {
-                    Text("★", color = Color(0xFFFFD76A), fontSize = 13.sp)
-                }
+            AppIconImage(app, iconSize)
+            if (prefs.showDrawerLabels) {
+                Text(
+                    text = app.label,
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    style = LabelStyle,
+                    modifier = Modifier.padding(horizontal = 2.dp),
+                )
             }
-            Text(
-                text = app.label,
-                color = Color.White,
-                fontSize = 12.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-                style = LabelStyle,
-                modifier = Modifier.padding(horizontal = 2.dp),
-            )
         }
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-            DropdownMenuItem(
-                text = { Text(if (favorite) "Remove from Favorites" else "Add to Favorites") },
-                onClick = { prefs.toggleFavorite(app.packageName); menu = false },
-            )
-            DropdownMenuItem(
-                text = { Text(if (hidden) "Restore to Drawer" else "Hide from Drawer") },
-                onClick = {
-                    if (hidden) prefs.unhidePackage(app.packageName) else prefs.hidePackage(app.packageName)
-                    menu = false
-                },
-            )
             DropdownMenuItem(
                 text = { Text("Add to Home") },
                 onClick = {
@@ -269,23 +375,61 @@ private fun DrawerApp(prefs: LauncherPrefs, allApps: List<AppInfo>, app: AppInfo
                 },
             )
             DropdownMenuItem(
-                text = { Text("Add to dock") },
+                text = { Text(if (inDock) "Remove from dock" else "Add to dock") },
                 onClick = {
                     menu = false
-                    if (!addToDock(prefs, allApps, app)) {
+                    if (inDock) {
+                        removeFromDock(prefs, allApps, app)
+                    } else if (!addToDock(prefs, allApps, app)) {
                         Toast.makeText(context, "The dock is full", Toast.LENGTH_SHORT).show()
                     }
                 },
             )
-            DropdownMenuItem(text = { Text("App info") }, onClick = {
-                menu = false
-                openAppInfo(context, app)
-            })
-            DropdownMenuItem(text = { Text("Uninstall") }, onClick = {
-                menu = false
-                uninstallApp(context, app)
-            })
+            DropdownMenuItem(
+                text = { Text(if (isFavorite) "Remove from favorites" else "Add to favorites") },
+                onClick = {
+                    menu = false
+                    prefs.toggleFavorite(app.packageName)
+                },
+            )
+            if (canHide(app.packageName)) {
+                DropdownMenuItem(
+                    text = { Text("Hide app") },
+                    onClick = {
+                        menu = false
+                        prefs.updateHidden(app.packageName, true)
+                        Toast.makeText(context, "${app.label} hidden. Restore it in Settings.", Toast.LENGTH_SHORT).show()
+                    },
+                )
+            }
+            DropdownMenuItem(
+                text = { Text("App info") },
+                onClick = {
+                    menu = false
+                    openAppInfo(context, app)
+                },
+            )
+            DropdownMenuItem(
+                text = { Text("Uninstall") },
+                onClick = {
+                    menu = false
+                    confirmUninstall = true
+                },
+            )
         }
+    }
+
+    if (confirmUninstall) {
+        ConfirmDialog(
+            title = "Uninstall ${app.label}?",
+            message = "This removes the app from your device. To only remove a shortcut, use Remove from Home.",
+            confirmLabel = "Uninstall",
+            onConfirm = {
+                confirmUninstall = false
+                uninstallApp(context, app)
+            },
+            onDismiss = { confirmUninstall = false },
+        )
     }
 }
 

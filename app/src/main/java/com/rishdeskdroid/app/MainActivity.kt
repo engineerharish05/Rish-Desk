@@ -10,10 +10,12 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.KeyEvent
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -22,7 +24,10 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.rishdeskdroid.app.data.AppRepository
+import com.rishdeskdroid.app.data.IconLoader
 import com.rishdeskdroid.app.data.LauncherPrefs
+import com.rishdeskdroid.app.data.OrientationGuard
+import com.rishdeskdroid.app.data.RecentStore
 import com.rishdeskdroid.app.data.WidgetController
 import com.rishdeskdroid.app.data.dockApps
 import com.rishdeskdroid.app.data.launchApp
@@ -39,6 +44,7 @@ class MainActivity : ComponentActivity() {
 
     private var screen by mutableStateOf(Screen.Home)
     private var otgConnected by mutableStateOf(false)
+    private var focusSearch by mutableStateOf(false)
 
     private val handler = Handler(Looper.getMainLooper())
 
@@ -51,7 +57,10 @@ class MainActivity : ComponentActivity() {
 
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            repo.reload()
+            val pkg = intent?.data?.schemeSpecificPart
+            // An updated or removed app can have a new icon, so forget the cached one
+            IconLoader.invalidate(pkg)
+            repo.reloadSoon()
         }
     }
 
@@ -66,6 +75,7 @@ class MainActivity : ComponentActivity() {
         prefs = LauncherPrefs(this)
         repo = AppRepository(this)
         widgets = WidgetController(this, prefs)
+        RecentStore.ensureLoaded(this)
 
         ContextCompat.registerReceiver(
             this,
@@ -83,6 +93,8 @@ class MainActivity : ComponentActivity() {
                 addAction(Intent.ACTION_PACKAGE_ADDED)
                 addAction(Intent.ACTION_PACKAGE_REMOVED)
                 addAction(Intent.ACTION_PACKAGE_CHANGED)
+                addAction(Intent.ACTION_PACKAGE_REPLACED)
+                addAction(Intent.ACTION_PACKAGE_FULLY_REMOVED)
                 addDataScheme("package")
             },
             ContextCompat.RECEIVER_NOT_EXPORTED,
@@ -91,6 +103,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             GlassTheme {
                 val status = rememberStatus()
+                LaunchedEffect(prefs.showSystemStatusBar) { applyStatusBar() }
                 LauncherRoot(
                     prefs = prefs,
                     apps = repo.apps,
@@ -98,6 +111,8 @@ class MainActivity : ComponentActivity() {
                     status = status,
                     screen = screen,
                     otgConnected = otgConnected,
+                    focusSearch = focusSearch,
+                    onSearchFocusHandled = { focusSearch = false },
                     onScreenChange = { screen = it },
                 )
             }
@@ -107,6 +122,8 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         widgets.start()
+        // Put back the user's rotation settings if an app was opened in forced landscape
+        OrientationGuard.restore(this)
         repo.reload()
         updateOtg()
     }
@@ -118,12 +135,15 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
+        repo.close()
         try {
             unregisterReceiver(usbReceiver)
+        } catch (e: Exception) {
+        }
+        try {
             unregisterReceiver(packageReceiver)
         } catch (e: Exception) {
         }
-        repo.close()
         super.onDestroy()
     }
 
@@ -137,7 +157,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if (hasFocus && HIDE_SYSTEM_STATUS_BAR) hideSystemStatusBar()
+        if (hasFocus) applyStatusBar()
     }
 
     @Suppress("DEPRECATION")
@@ -148,25 +168,48 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        // Esc acts like Back, so it closes menus, search, edit mode and screens in the usual order
         if (prefs.keyboardEnabled &&
+            event.keyCode == KeyEvent.KEYCODE_ESCAPE &&
             event.action == KeyEvent.ACTION_DOWN &&
-            event.repeatCount == 0 &&
-            handleShortcut(event)
+            event.repeatCount == 0
         ) {
+            onBackPressedDispatcher.onBackPressed()
             return true
+        }
+        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0 && isShortcut(event)) {
+            if (!prefs.keyboardEnabled) {
+                Toast.makeText(this, "Keyboard shortcuts are off (Settings > Keyboard and mouse)", Toast.LENGTH_SHORT).show()
+                return super.dispatchKeyEvent(event)
+            }
+            if (handleShortcut(event)) return true
         }
         return super.dispatchKeyEvent(event)
     }
 
-    private fun handleShortcut(event: KeyEvent): Boolean {
-        if (event.keyCode == KeyEvent.KEYCODE_ESCAPE) {
-            if (screen == Screen.Home) return false
-            screen = Screen.Home
-            return true
+    /** Shortcuts use Ctrl, Alt or the Meta (Windows/Command) key, so plain typing is never captured. */
+    private fun hasModifier(event: KeyEvent): Boolean =
+        event.isCtrlPressed || event.isAltPressed || event.isMetaPressed
+
+    private fun isShortcut(event: KeyEvent): Boolean {
+        if (!hasModifier(event)) return false
+        return when (event.keyCode) {
+            KeyEvent.KEYCODE_D, KeyEvent.KEYCODE_F, KeyEvent.KEYCODE_SLASH,
+            KeyEvent.KEYCODE_COMMA, KeyEvent.KEYCODE_H -> true
+            in KeyEvent.KEYCODE_1..KeyEvent.KEYCODE_9 -> true
+            else -> false
         }
-        if (!event.isCtrlPressed) return false
+    }
+
+    private fun handleShortcut(event: KeyEvent): Boolean {
         return when (event.keyCode) {
             KeyEvent.KEYCODE_D -> {
+                focusSearch = true
+                screen = Screen.Drawer
+                true
+            }
+            KeyEvent.KEYCODE_F, KeyEvent.KEYCODE_SLASH -> {
+                focusSearch = true
                 screen = Screen.Drawer
                 true
             }
@@ -197,17 +240,16 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * The design draws its own status bar, so Android's is hidden. Swipe down from the top edge
-     * to peek at it (and pull down notifications).
+     * By default the design draws its own status bar and Android's is hidden (swipe down from the top
+     * edge to peek at it and pull down notifications). The setting can show Android's bar instead.
      */
-    private fun hideSystemStatusBar() {
+    private fun applyStatusBar() {
         val controller = WindowCompat.getInsetsController(window, window.decorView)
-        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        controller.hide(WindowInsetsCompat.Type.statusBars())
-    }
-
-    private companion object {
-        /** Set to false to keep Android's own status bar instead of the custom one. */
-        const val HIDE_SYSTEM_STATUS_BAR = true
+        if (prefs.showSystemStatusBar) {
+            controller.show(WindowInsetsCompat.Type.statusBars())
+        } else {
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.hide(WindowInsetsCompat.Type.statusBars())
+        }
     }
 }

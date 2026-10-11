@@ -26,6 +26,7 @@ import java.util.Date
 data class StatusState(
     val carrier: String = "",
     val time: String = "",
+    val date: String = "",
     val bluetoothOn: Boolean = false,
     val wifiOn: Boolean = false,
     val hasCellular: Boolean = false,
@@ -151,6 +152,7 @@ class StatusController(context: Context) {
         state = StatusState(
             carrier = carrier,
             time = DateFormat.getTimeFormat(context).format(Date()),
+            date = DateFormat.format("EEE, d MMM", Date()).toString(),
             bluetoothOn = bluetoothOn,
             wifiOn = wifiOn,
             hasCellular = simReady,

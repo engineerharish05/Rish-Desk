@@ -164,3 +164,6 @@ Please use [GitHub Issues](https://github.com/engineerharish05/Rish-Deskdroid/is
 ---
 
 <p align="center">Designed by Harish P · Rish Deskdroid</p>
+
+## Version 1.1.0 highlights
+Folders and drag-and-drop on a configurable home grid, a searchable drawer with favorites / hidden apps / sorting, a resizable-widget strip, wallpaper fit / position / dim / blur, accent colours, keyboard navigation, and reset options. See CHANGELOG.md for the full list and the limits Android imposes on launchers.
