@@ -157,6 +157,20 @@ The original project code is licensed under the **GNU General Public License v3.
 
 Third-party dependencies remain subject to their respective licenses. The license does not grant permission to use the RishDesk name or logo as an endorsement.
 
+## Repository guide
+
+The repository includes short guides for contributors and maintainers:
+
+- [Repository structure](docs/REPOSITORY_STRUCTURE.md) — where source, tests, build files, and documentation belong.
+- [Contributing](CONTRIBUTING.md) — branch, code, testing, and pull request expectations.
+- [Maintenance checklist](docs/MAINTENANCE_CHECKLIST.md) — review, branch hygiene, and release preparation.
+- [Security policy](SECURITY.md) — how to report a vulnerability privately.
+- [Changelog](CHANGELOG.md) — user-facing changes.
+- [Feature roadmap](FEATURE_ROADMAP.md) — planned work and progress.
+- [Pull request template](.github/PULL_REQUEST_TEMPLATE.md) — the standard review checklist.
+
+Build configuration and Android source paths have intentionally been left in place. This organization pass adds navigation and maintainer guidance without deleting or relocating existing project files.
+
 ## Feedback and issues
 
 Please use [GitHub Issues](https://github.com/engineerharish05/Rish-Deskdroid/issues) to report reproducible bugs or suggest improvements. Include your Android version, device model, steps to reproduce, and relevant screenshots or logs where possible.
@@ -172,7 +186,7 @@ Folders and drag-and-drop on a configurable home grid, a searchable drawer with 
 | Item | Value |
 | --- | --- |
 | Product name (shown on the phone) | RishDesk |
-| Repository | `engineerharish05/Rish-Deskdroid` (unchanged; renaming it on GitHub is the owner's decision) |
+| Repository | `engineerharish05/Rish-Desk` (GitHub redirects the old `Rish-Deskdroid` address) |
 | Gradle project name | RishDesk |
 | Kotlin package / Android application ID | `com.rishdeskdroid.app` (kept so existing installs update in place and keep their settings) |
 | Debug APK | `RishDesk-debug.apk` |
