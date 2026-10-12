@@ -26,6 +26,7 @@ import com.rishdeskdroid.app.data.LauncherPrefs
 import com.rishdeskdroid.app.data.WidgetController
 import com.rishdeskdroid.app.data.dockApps
 import com.rishdeskdroid.app.data.launchApp
+import com.rishdeskdroid.app.data.shouldReloadAppsForPackageAction
 import com.rishdeskdroid.app.ui.GlassTheme
 import com.rishdeskdroid.app.ui.LauncherRoot
 import com.rishdeskdroid.app.ui.Screen
@@ -41,6 +42,9 @@ class MainActivity : ComponentActivity() {
     private var otgConnected by mutableStateOf(false)
 
     private val handler = Handler(Looper.getMainLooper())
+    private val packageReloadRunnable = Runnable {
+        if (::repo.isInitialized) repo.reload()
+    }
 
     private val usbReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -51,7 +55,12 @@ class MainActivity : ComponentActivity() {
 
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            repo.reload()
+            if (!shouldReloadAppsForPackageAction(intent?.action)) return
+
+            // Replacements may emit several package broadcasts in quick succession.
+            // Coalesce them into one scan after the package manager has settled.
+            handler.removeCallbacks(packageReloadRunnable)
+            handler.postDelayed(packageReloadRunnable, PACKAGE_RELOAD_DEBOUNCE_MS)
         }
     }
 
@@ -83,6 +92,7 @@ class MainActivity : ComponentActivity() {
                 addAction(Intent.ACTION_PACKAGE_ADDED)
                 addAction(Intent.ACTION_PACKAGE_REMOVED)
                 addAction(Intent.ACTION_PACKAGE_CHANGED)
+                addAction(Intent.ACTION_PACKAGE_REPLACED)
                 addDataScheme("package")
             },
             ContextCompat.RECEIVER_NOT_EXPORTED,
@@ -207,6 +217,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private companion object {
+        const val PACKAGE_RELOAD_DEBOUNCE_MS = 250L
+
         /** Set to false to keep Android's own status bar instead of the custom one. */
         const val HIDE_SYSTEM_STATUS_BAR = true
     }
