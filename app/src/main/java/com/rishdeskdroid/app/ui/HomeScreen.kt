@@ -68,6 +68,7 @@ import com.rishdeskdroid.app.data.launchApp
 import com.rishdeskdroid.app.data.openLauncherChooser
 import com.rishdeskdroid.app.data.openMobileSettings
 import com.rishdeskdroid.app.data.removeFromDock
+import com.rishdeskdroid.app.data.moveHomeShortcut
 
 /**
  * The home screen: widgets in the middle, the glass dock along the bottom.
@@ -461,6 +462,22 @@ private fun ShortcutCell(prefs: LauncherPrefs, app: AppInfo, iconSize: Dp) {
             )
         }
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            DropdownMenuItem(
+                text = { Text("Move left") },
+                onClick = { menu = false; moveHomeShortcut(prefs, app.packageName, -1) },
+            )
+            DropdownMenuItem(
+                text = { Text("Move right") },
+                onClick = { menu = false; moveHomeShortcut(prefs, app.packageName, 1) },
+            )
+            DropdownMenuItem(
+                text = { Text("Move up") },
+                onClick = { menu = false; moveHomeShortcut(prefs, app.packageName, -HOME_COLUMNS) },
+            )
+            DropdownMenuItem(
+                text = { Text("Move down") },
+                onClick = { menu = false; moveHomeShortcut(prefs, app.packageName, HOME_COLUMNS) },
+            )
             // Only removes the shortcut; the app stays installed and in the drawer
             DropdownMenuItem(
                 text = { Text("Remove from Home") },

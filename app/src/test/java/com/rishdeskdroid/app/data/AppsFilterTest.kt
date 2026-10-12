@@ -12,6 +12,55 @@ class AppsFilterTest {
         AppInfo("YouTube Music", "com.google.music", "Main"),
     )
 
+    private val homeShortcuts = listOf(
+        HomeShortcut(0, "a"),
+        HomeShortcut(1, "b"),
+        HomeShortcut(5, "c"),
+    )
+
+    @Test
+    fun homeShortcutMoveSwapsWithOccupiedAdjacentCell() {
+        assertEquals(
+            listOf(HomeShortcut(0, "b"), HomeShortcut(1, "a"), HomeShortcut(5, "c")),
+            reorderHomeShortcuts(homeShortcuts, "a", 1),
+        )
+    }
+
+    @Test
+    fun homeShortcutMoveUsesEmptyCellWithoutChangingOtherShortcuts() {
+        assertEquals(
+            listOf(HomeShortcut(0, "a"), HomeShortcut(1, "b"), HomeShortcut(6, "c")),
+            reorderHomeShortcuts(homeShortcuts, "c", 1),
+        )
+    }
+
+    @Test
+    fun homeShortcutMovesUpAndDownWithinPage() {
+        val shortcuts = listOf(HomeShortcut(5, "a"), HomeShortcut(10, "b"))
+        assertEquals(
+            listOf(HomeShortcut(0, "a"), HomeShortcut(10, "b")),
+            reorderHomeShortcuts(shortcuts, "a", -HOME_COLUMNS),
+        )
+        assertEquals(
+            listOf(HomeShortcut(5, "b"), HomeShortcut(10, "a")),
+            reorderHomeShortcuts(shortcuts, "a", HOME_COLUMNS),
+        )
+    }
+
+    @Test
+    fun homeShortcutMoveRespectsGridEdgesAndInvalidRequests() {
+        val rowStart = listOf(HomeShortcut(5, "a"))
+        val rowEnd = listOf(HomeShortcut(9, "a"))
+        val topRow = listOf(HomeShortcut(1, "a"))
+        val bottomRow = listOf(HomeShortcut(16, "a"))
+        assertEquals(rowStart, reorderHomeShortcuts(rowStart, "a", -1))
+        assertEquals(rowEnd, reorderHomeShortcuts(rowEnd, "a", 1))
+        assertEquals(topRow, reorderHomeShortcuts(topRow, "a", -HOME_COLUMNS))
+        assertEquals(bottomRow, reorderHomeShortcuts(bottomRow, "a", HOME_COLUMNS))
+        assertEquals(homeShortcuts, reorderHomeShortcuts(homeShortcuts, "missing", 1))
+        assertEquals(homeShortcuts, reorderHomeShortcuts(homeShortcuts, "a", 2))
+    }
+
     @Test
     fun searchMatchesLabelsCaseInsensitively() {
         val result = filterAndSortApps(

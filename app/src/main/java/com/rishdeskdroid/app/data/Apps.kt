@@ -134,6 +134,45 @@ fun addToHome(prefs: LauncherPrefs, apps: List<AppInfo>, app: AppInfo): AddToHom
     return AddToHomeResult.Added
 }
 
+/**
+ * Reorders a home shortcut by one grid cell. Horizontal moves never wrap between rows;
+ * vertical moves stay within the same page. If the destination is occupied, the shortcuts swap.
+ * Invalid directions, missing apps, and boundary moves leave the list unchanged.
+ */
+fun reorderHomeShortcuts(
+    shortcuts: List<HomeShortcut>,
+    packageName: String,
+    delta: Int,
+): List<HomeShortcut> {
+    if (delta !in setOf(-HOME_COLUMNS, -1, 1, HOME_COLUMNS)) return shortcuts
+    val source = shortcuts.firstOrNull { it.packageName == packageName } ?: return shortcuts
+    val from = source.slot
+    val target = from + delta
+    if (target !in 0 until HOME_PER_PAGE * MAX_HOME_PAGES) return shortcuts
+    if (delta == -1 && from % HOME_COLUMNS == 0) return shortcuts
+    if (delta == 1 && from % HOME_COLUMNS == HOME_COLUMNS - 1) return shortcuts
+    if (delta == -HOME_COLUMNS && from % HOME_PER_PAGE / HOME_COLUMNS == 0) return shortcuts
+    if (delta == HOME_COLUMNS && from % HOME_PER_PAGE / HOME_COLUMNS == HOME_ROWS - 1) return shortcuts
+
+    val occupant = shortcuts.firstOrNull { it.slot == target }
+    return shortcuts.map { shortcut ->
+        when {
+            shortcut.packageName == packageName -> shortcut.copy(slot = target)
+            occupant != null && shortcut.packageName == occupant.packageName -> shortcut.copy(slot = from)
+            else -> shortcut
+        }
+    }.sortedBy { it.slot }
+}
+
+/** Persist a shortcut move. Returns false when the move was not possible. */
+fun moveHomeShortcut(prefs: LauncherPrefs, packageName: String, delta: Int): Boolean {
+    val current = prefs.homeShortcuts
+    val reordered = reorderHomeShortcuts(current, packageName, delta)
+    if (reordered == current) return false
+    prefs.updateHomeShortcuts(reordered)
+    return true
+}
+
 /** Removes only the home shortcut. The app stays installed and stays in the drawer. */
 fun removeFromHome(prefs: LauncherPrefs, packageName: String) {
     prefs.updateHomeShortcuts(prefs.homeShortcuts.filter { it.packageName != packageName })
