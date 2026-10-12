@@ -1,23 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- RishDesk "RD" monogram: chamfered R and D, copper and gold. Artwork stays inside the 66dp adaptive safe zone. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- R: a clear stem, rounded bowl and diagonal leg -->
     <path
-        android:fillColor="#00000000"
-        android:strokeColor="#292A2D"
-        android:strokeWidth="5.2"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M27,75 L27,34 L39,34 C48,34 49,47 39,48 L27,48 M37,48 L49,74" />
-    <!-- D: unmistakable straight stem and continuous rounded bowl -->
+        android:fillType="evenOdd"
+        android:pathData="M28.4,37.22 L51.65,37.22 L51.65,43.57 L47.8,50.82 L48.32,50.82 L51.65,57.14 L51.65,70.78 L45.33,70.78 L45.33,57.14 L31.39,57.14 L31.39,64.43 L28.03,70.78 L25.04,70.78 L25.04,43.57 Z M31.39,43.57 L45.33,43.57 L41.48,50.82 L31.39,50.82 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="54" android:startY="37"
+                android:endX="54" android:endY="71"
+                android:type="linear">
+                <item android:offset="0" android:color="#E0996A" />
+                <item android:offset="1" android:color="#B9622F" />
+            </gradient>
+        </aapt:attr>
+    </path>
     <path
-        android:fillColor="#00000000"
-        android:strokeColor="#292A2D"
-        android:strokeWidth="5.2"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M56,34 L56,74 L64,74 C82,74 82,34 64,34 Z" />
+        android:fillType="evenOdd"
+        android:pathData="M59.72,37.22 L83.0,37.22 L83.0,57.14 L75.79,70.78 L56.39,70.78 L56.39,43.57 Z M62.71,43.57 L76.68,43.57 L76.68,57.14 L72.84,64.43 L62.71,64.43 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="54" android:startY="37"
+                android:endX="54" android:endY="71"
+                android:type="linear">
+                <item android:offset="0" android:color="#F6D77E" />
+                <item android:offset="1" android:color="#D9A23F" />
+            </gradient>
+        </aapt:attr>
+    </path>
 </vector>

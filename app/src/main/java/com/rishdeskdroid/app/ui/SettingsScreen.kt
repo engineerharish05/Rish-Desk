@@ -521,7 +521,7 @@ fun SettingsScreen(
                 RowDivider()
                 SettingRow(
                     Ico.exit, Tiles.red, "Default launcher",
-                    "To make Rish Deskdroid your home app, press Home and choose it with \"Always\", or pick it in Android's default home app screen.",
+                    "To make RishDesk your home app, press Home and choose it with \"Always\", or pick it in Android's default home app screen.",
                 ) {
                     GlassButton("Open") { openLauncherChooser(context) }
                 }
@@ -530,7 +530,7 @@ fun SettingsScreen(
             // ---- Privacy and permissions ------------------------------------------------------
             Section("Privacy and permissions", prefs) {
                 InfoText(
-                    "Everything stays on this device. Rish Deskdroid has no internet permission, collects nothing and sends nothing.\n\n" +
+                    "Everything stays on this device. RishDesk has no internet permission, collects nothing and sends nothing.\n\n" +
                         "Permissions it asks for, and why:\n" +
                         "• Modify system settings: only to lock rotation to landscape for apps you open (optional).\n" +
                         "• Network and Bluetooth state: to show Wi-Fi, mobile signal and Bluetooth icons in the status bar.\n" +

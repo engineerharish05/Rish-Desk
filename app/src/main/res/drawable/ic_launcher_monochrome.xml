@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Single-colour RD for Android 13+ themed icons -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M28.4,37.22 L51.65,37.22 L51.65,43.57 L47.8,50.82 L48.32,50.82 L51.65,57.14 L51.65,70.78 L45.33,70.78 L45.33,57.14 L31.39,57.14 L31.39,64.43 L28.03,70.78 L25.04,70.78 L25.04,43.57 Z M31.39,43.57 L45.33,43.57 L41.48,50.82 L31.39,50.82 Z M59.72,37.22 L83.0,37.22 L83.0,57.14 L75.79,70.78 L56.39,70.78 L56.39,43.57 Z M62.71,43.57 L76.68,43.57 L76.68,57.14 L72.84,64.43 L62.71,64.43 Z" />
+</vector>

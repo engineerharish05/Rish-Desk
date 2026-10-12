@@ -4,6 +4,10 @@ Notable changes to Rish Deskdroid are recorded here.
 
 ## 1.1.0 — 2026-10-11
 
+### Changed
+- The app is now called **RishDesk**, with a new copper-and-gold RD adaptive icon (including a monochrome layer for themed icons). The application ID is unchanged, so this installs over the previous build.
+- APK files are named `RishDesk-debug.apk` and `RishDesk-1.1.0-preview.apk`.
+
 ### Added
 - Home screen: configurable grid (default 5 x 4), drag-and-drop shortcuts, folders (create, rename, add, remove), custom labels, resizable widgets that follow each widget's own size limits, edit mode.
 - App drawer: search with clear button and empty state, All / Favorites / Recent filters, sort (A-Z, Z-A, newest, recent), favorites, hide and restore apps, configurable grid and icon size, long-press menu (Add to Home, dock, favorite, hide, App info, Uninstall with confirmation).

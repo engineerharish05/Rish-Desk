@@ -4,6 +4,11 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+// Output files are named RishDesk-debug.apk, RishDesk-release-unsigned.apk, ...
+base {
+    archivesName.set("RishDesk")
+}
+
 android {
     namespace = "com.rishdeskdroid.app"
     compileSdk = 35

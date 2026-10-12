@@ -299,7 +299,7 @@ fun launchApp(context: Context, app: AppInfo) {
             sp.edit().putBoolean("asked_write_settings", true).apply()
             Toast.makeText(
                 context,
-                "To open apps in landscape, allow \"Modify system settings\" in Rish Deskdroid settings",
+                "To open apps in landscape, allow \"Modify system settings\" in RishDesk settings",
                 Toast.LENGTH_LONG,
             ).show()
         }

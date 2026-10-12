@@ -1,4 +1,4 @@
-name: Build Rish Deskdroid
+name: Build RishDesk
 
 on:
   push:
@@ -35,7 +35,7 @@ jobs:
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: Rish-Deskdroid-debug
+          name: RishDesk-debug
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 14
@@ -72,8 +72,8 @@ jobs:
             -keypass "$STORE_PASS" \
             -alias rish-preview \
             -keyalg RSA -keysize 2048 -validity 3650 \
-            -dname "CN=Rish Deskdroid Preview, OU=CI, O=Rish Deskdroid, L=Chennai, ST=Tamil Nadu, C=IN"
-          UNSIGNED="app/build/outputs/apk/release/app-release-unsigned.apk"
+            -dname "CN=RishDesk Preview, OU=CI, O=RishDesk, L=Chennai, ST=Tamil Nadu, C=IN"
+          UNSIGNED="app/build/outputs/apk/release/RishDesk-release-unsigned.apk"
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
           test -f "$UNSIGNED"
           test -n "$APKSIGNER"
@@ -83,13 +83,13 @@ jobs:
             --ks-key-alias rish-preview \
             --ks-pass "pass:$STORE_PASS" \
             --key-pass "pass:$STORE_PASS" \
-            --out "dist/Rish-Deskdroid-1.0.0-preview.apk" \
+            --out "dist/RishDesk-1.1.0-preview.apk" \
             "$UNSIGNED"
-          "$APKSIGNER" verify --verbose "dist/Rish-Deskdroid-1.0.0-preview.apk"
+          "$APKSIGNER" verify --verbose "dist/RishDesk-1.1.0-preview.apk"
       - name: Upload release-preview APK
         uses: actions/upload-artifact@v4
         with:
-          name: Rish-Deskdroid-release-preview
-          path: dist/Rish-Deskdroid-1.0.0-preview.apk
+          name: RishDesk-release-preview
+          path: dist/RishDesk-1.1.0-preview.apk
           if-no-files-found: error
           retention-days: 30
