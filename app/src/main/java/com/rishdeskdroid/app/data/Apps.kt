@@ -253,11 +253,46 @@ private fun safeStart(context: Context, intent: Intent, errorMessage: String) {
  * into landscape. Each target app and the device's own orientation settings control that.
  */
 fun launchApp(context: Context, app: AppInfo) {
+    val targetState = try {
+        val activityInfo = context.packageManager.getActivityInfo(app.component, 0)
+        launchTargetState(
+            activityFound = true,
+            activityEnabled = activityInfo.enabled,
+            applicationEnabled = activityInfo.applicationInfo.enabled,
+        )
+    } catch (e: PackageManager.NameNotFoundException) {
+        launchTargetState(activityFound = false, activityEnabled = false, applicationEnabled = false)
+    } catch (e: SecurityException) {
+        Toast.makeText(context, "Can't check whether ${app.label} is available", Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    when (targetState) {
+        LaunchTargetState.MISSING -> {
+            Toast.makeText(context, "${app.label} is no longer available", Toast.LENGTH_SHORT).show()
+            return
+        }
+        LaunchTargetState.DISABLED -> {
+            Toast.makeText(context, "${app.label} is disabled", Toast.LENGTH_SHORT).show()
+            return
+        }
+        LaunchTargetState.AVAILABLE -> Unit
+    }
+
     val intent = Intent(Intent.ACTION_MAIN)
         .addCategory(Intent.CATEGORY_LAUNCHER)
         .setComponent(app.component)
-        .addFlags(Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-    safeStart(context, intent, "Can't open ${app.label}")
+        .addFlags(Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED or Intent.FLAG_ACTIVITY_NEW_TASK)
+
+    try {
+        context.startActivity(intent)
+    } catch (e: ActivityNotFoundException) {
+        Toast.makeText(context, "${app.label} is no longer available", Toast.LENGTH_SHORT).show()
+    } catch (e: SecurityException) {
+        Toast.makeText(context, "Android blocked opening ${app.label}", Toast.LENGTH_SHORT).show()
+    } catch (e: Exception) {
+        Toast.makeText(context, "Can't open ${app.label}", Toast.LENGTH_SHORT).show()
+    }
 }
 
 fun openAppInfo(context: Context, app: AppInfo) {

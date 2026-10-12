@@ -107,3 +107,10 @@ This file is the source of truth for the feature-by-feature implementation loop.
 
 ## Platform boundary
 A launcher can only perform actions permitted by Android APIs, declared permissions, and user-granted special access. Floating windows, system controls, file access, widget behavior, and interactions with other apps must not be represented as fully supported unless verified against the target Android versions.
+
+
+## Latest engineering pass — 2026-10-12
+
+- **App launch recovery (in review):** launcher actions now check whether the selected activity still exists and whether both the activity and its application are enabled before attempting to start it. Expected missing-target and permission failures produce a short user-facing message instead of escaping the launch handler.
+- **Automated coverage added:** pure launch-readiness decision tests cover missing, disabled, and available targets.
+- **Verification limitation:** keep the app-launch checklist item above unchecked until CI passes and package removal/disable/re-enable behavior is exercised on a physical Android device.
