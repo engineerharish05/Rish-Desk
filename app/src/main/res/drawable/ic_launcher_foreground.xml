@@ -4,20 +4,11 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- R: a clear stem, rounded bowl and diagonal leg -->
+    <!-- Angular RD monogram matching the supplied high-contrast wordmark. -->
     <path
-        android:fillColor="#00000000"
-        android:strokeColor="#292A2D"
-        android:strokeWidth="5.2"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M27,75 L27,34 L39,34 C48,34 49,47 39,48 L27,48 M37,48 L49,74" />
-    <!-- D: unmistakable straight stem and continuous rounded bowl -->
+        android:fillColor="#000000"
+        android:pathData="M12,31 L20,17 L49,17 L49,31 L42,44 L49,56 L49,91 L35,91 L35,62 L21,62 L21,73 L16,83 L12,83 L12,31 Z M21,31 L21,43 L35,43 L41,31 Z" />
     <path
-        android:fillColor="#00000000"
-        android:strokeColor="#292A2D"
-        android:strokeWidth="5.2"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M56,34 L56,74 L64,74 C82,74 82,34 64,34 Z" />
+        android:fillColor="#000000"
+        android:pathData="M56,17 L91,17 L91,56 L78,83 L56,83 Z M69,31 L69,69 L75,69 L81,56 L81,31 Z" />
 </vector>
