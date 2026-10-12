@@ -101,6 +101,31 @@ fun dockApps(prefs: LauncherPrefs, apps: List<AppInfo>): List<AppInfo> =
         apps.firstOrNull { it.packageName == pkg }
     }
 
+/**
+ * Returns a reordered dock package list. A move outside the valid range is a no-op.
+ * Keeping this pure makes dock ordering behavior straightforward to unit-test.
+ */
+fun reorderDockPackages(packages: List<String>, packageName: String, direction: Int): List<String> {
+    if (direction != -1 && direction != 1) return packages
+    val from = packages.indexOf(packageName)
+    val to = from + direction
+    if (from < 0 || to !in packages.indices) return packages
+    return packages.toMutableList().also { list ->
+        val moved = list[from]
+        list[from] = list[to]
+        list[to] = moved
+    }
+}
+
+/** Moves a pinned app one position left or right. Returns false if no move was possible. */
+fun moveDockItem(prefs: LauncherPrefs, apps: List<AppInfo>, packageName: String, direction: Int): Boolean {
+    val current = dockApps(prefs, apps).map { it.packageName }
+    val reordered = reorderDockPackages(current, packageName, direction)
+    if (reordered == current) return false
+    prefs.updateDockPackages(reordered)
+    return true
+}
+
 /** Returns false if the dock is full. */
 fun addToDock(prefs: LauncherPrefs, apps: List<AppInfo>, app: AppInfo): Boolean {
     val current = dockApps(prefs, apps).map { it.packageName }

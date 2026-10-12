@@ -13,6 +13,36 @@ class AppsFilterTest {
     )
 
     @Test
+    fun dockCanMoveAnAppOnePositionRight() {
+        assertEquals(
+            listOf("a", "c", "b"),
+            reorderDockPackages(listOf("a", "b", "c"), "b", 1),
+        )
+    }
+
+    @Test
+    fun dockCanMoveAnAppOnePositionLeft() {
+        assertEquals(
+            listOf("b", "a", "c"),
+            reorderDockPackages(listOf("a", "b", "c"), "b", -1),
+        )
+    }
+
+    @Test
+    fun dockReorderDoesNotMovePastEitherBoundary() {
+        val packages = listOf("a", "b", "c")
+        assertEquals(packages, reorderDockPackages(packages, "a", -1))
+        assertEquals(packages, reorderDockPackages(packages, "c", 1))
+    }
+
+    @Test
+    fun dockReorderIgnoresUnknownPackagesAndInvalidDirections() {
+        val packages = listOf("a", "b", "c")
+        assertEquals(packages, reorderDockPackages(packages, "missing", 1))
+        assertEquals(packages, reorderDockPackages(packages, "b", 0))
+    }
+
+    @Test
     fun searchMatchesLabelsCaseInsensitively() {
         val result = filterAndSortApps(
             apps = apps,

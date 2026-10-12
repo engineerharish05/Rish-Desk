@@ -68,6 +68,7 @@ import com.rishdeskdroid.app.data.launchApp
 import com.rishdeskdroid.app.data.openLauncherChooser
 import com.rishdeskdroid.app.data.openMobileSettings
 import com.rishdeskdroid.app.data.removeFromDock
+import com.rishdeskdroid.app.data.moveDockItem
 
 /**
  * The home screen: widgets in the middle, the glass dock along the bottom.
@@ -262,9 +263,17 @@ private fun Dock(
         }
 
         // Pinned apps: Chrome, YouTube, Google, GPT by default
-        dock.forEach { app ->
+        dock.forEachIndexed { index, app ->
             key(app.key) {
-                DockApp(app, tile, onRemove = { removeFromDock(prefs, apps, app) })
+                DockApp(
+                    app = app,
+                    tile = tile,
+                    canMoveLeft = index > 0,
+                    canMoveRight = index < dock.lastIndex,
+                    onMoveLeft = { moveDockItem(prefs, apps, app.packageName, -1) },
+                    onMoveRight = { moveDockItem(prefs, apps, app.packageName, 1) },
+                    onRemove = { removeFromDock(prefs, apps, app) },
+                )
             }
         }
 
@@ -314,6 +323,10 @@ private fun Dock(
 private fun DockApp(
     app: AppInfo,
     tile: androidx.compose.ui.unit.Dp,
+    canMoveLeft: Boolean,
+    canMoveRight: Boolean,
+    onMoveLeft: () -> Unit,
+    onMoveRight: () -> Unit,
     onRemove: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -336,6 +349,18 @@ private fun DockApp(
             AppIconImage(app, tile)
         }
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            if (canMoveLeft) {
+                DropdownMenuItem(
+                    text = { Text("Move left") },
+                    onClick = { menu = false; onMoveLeft() },
+                )
+            }
+            if (canMoveRight) {
+                DropdownMenuItem(
+                    text = { Text("Move right") },
+                    onClick = { menu = false; onMoveRight() },
+                )
+            }
             DropdownMenuItem(
                 text = { Text("Remove from dock") },
                 onClick = {
