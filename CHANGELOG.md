@@ -5,7 +5,7 @@ Notable changes to Rish Deskdroid are recorded here.
 ## 1.1.0 — 2026-10-11
 
 ### Changed
-- The app is now called **RishDesk**, with a new copper-and-gold RD adaptive icon (including a monochrome layer for themed icons). The application ID is unchanged, so this installs over the previous build.
+- The app is now called **RishDesk**, with your RD artwork as the adaptive icon (black on cream, plus a monochrome layer for themed icons). The application ID is unchanged, so this installs over the previous build.
 - APK files are named `RishDesk-debug.apk` and `RishDesk-1.1.0-preview.apk`.
 
 ### Added
