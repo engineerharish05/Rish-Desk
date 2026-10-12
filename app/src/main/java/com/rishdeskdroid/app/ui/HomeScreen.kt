@@ -432,7 +432,11 @@ private fun ShortcutGrid(prefs: LauncherPrefs, apps: List<AppInfo>, modifier: Mo
 private fun ShortcutPage(prefs: LauncherPrefs, page: Int, installed: Map<String, AppInfo>) {
     val bySlot = prefs.homeShortcuts.associateBy { it.slot }
     BoxWithConstraints(Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
-        val iconSize = (maxHeight / HOME_ROWS - 24.dp).coerceIn(24.dp, 52.dp)
+        // Size icons against both available row height and column width. This prevents
+        // the 5-column grid from clipping on narrow devices or in landscape orientation.
+        val heightBound = maxHeight / HOME_ROWS - 24.dp
+        val widthBound = maxWidth / HOME_COLUMNS - 8.dp
+        val iconSize = minOf(heightBound, widthBound, 52.dp).coerceAtLeast(16.dp)
         Column(Modifier.fillMaxSize()) {
             for (row in 0 until HOME_ROWS) {
                 Row(Modifier.weight(1f).fillMaxWidth()) {
