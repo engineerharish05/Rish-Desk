@@ -4,7 +4,7 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Angular RD monogram matching the supplied high-contrast wordmark. -->
+    <!-- Angular RD monogram matching the supplied high-contrast wordmark; CI verification. -->
     <path
         android:fillColor="#000000"
         android:pathData="M12,31 L20,17 L49,17 L49,31 L42,44 L49,56 L49,91 L35,91 L35,62 L21,62 L21,73 L16,83 L12,83 L12,31 Z M21,31 L21,43 L35,43 L41,31 Z" />
