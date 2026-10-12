@@ -166,6 +166,18 @@ fun DrawerScreen(
             )
         }
 
+        if (showHidden) {
+            Text(
+                text = "Hidden apps are still installed. Restore an app from its menu to show it in the drawer again.",
+                color = Color.White.copy(alpha = 0.72f),
+                fontSize = 12.sp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 2.dp, vertical = 4.dp)
+                    .semantics { contentDescription = "Hidden apps remain installed and can be restored to the drawer" },
+            )
+        }
+
         if (visibleApps.isEmpty()) {
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text(
