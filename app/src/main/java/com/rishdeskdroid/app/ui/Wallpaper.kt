@@ -1,7 +1,11 @@
 package com.rishdeskdroid.app.ui
 
+import android.os.Build
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -21,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.rishdeskdroid.app.data.LauncherPrefs
+import com.rishdeskdroid.app.data.WallpaperFit
 import com.rishdeskdroid.app.data.WallpaperStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -32,30 +37,57 @@ fun Wallpaper(prefs: LauncherPrefs, blurred: Boolean, modifier: Modifier = Modif
     val bitmap by produceState<ImageBitmap?>(initialValue = null, key1 = prefs.wallpaperVersion) {
         value = withContext(Dispatchers.IO) { WallpaperStore.load(context) }
     }
-    val blurRadius by animateDpAsState(if (blurred) 22.dp else 0.dp, label = "wallpaperBlur")
-    val zoom by animateFloatAsState(if (blurred) 1.06f else 1f, label = "wallpaperZoom")
+    val duration = if (prefs.animations) 300 else 0
+    // The extra blur behind the drawer and settings, or the user's own blur, whichever is stronger
+    val targetBlur = maxOf(if (blurred) 22 else 0, prefs.wallpaperBlur).dp
+    val blurRadius by animateDpAsState(targetBlur, tween(duration), label = "wallpaperBlur")
+    val zoom by animateFloatAsState(if (blurred) 1.06f else 1f, tween(duration), label = "wallpaperZoom")
 
-    Box(
-        modifier
-            .fillMaxSize()
-            .graphicsLayer {
-                scaleX = zoom
-                scaleY = zoom
+    Box(modifier.fillMaxSize()) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    scaleX = zoom
+                    scaleY = zoom
+                }
+                .then(
+                    if (Build.VERSION.SDK_INT >= 31 && blurRadius > 0.dp) Modifier.blur(blurRadius) else Modifier,
+                ),
+        ) {
+            val photo = bitmap
+            if (photo != null) {
+                WallpaperImage(photo, prefs.wallpaperFit, prefs.wallpaperX, prefs.wallpaperY, Modifier.fillMaxSize())
+            } else {
+                DefaultWallpaper(Modifier.fillMaxSize())
             }
-            .blur(blurRadius),
-    ) {
-        val photo = bitmap
-        if (photo != null) {
-            Image(
-                bitmap = photo,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-        } else {
-            DefaultWallpaper(Modifier.fillMaxSize())
+        }
+        if (prefs.wallpaperDim > 0f) {
+            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = prefs.wallpaperDim)))
         }
     }
+}
+
+/** A wallpaper photo drawn with the user's fit and position settings. */
+@Composable
+fun WallpaperImage(
+    bitmap: ImageBitmap,
+    fit: WallpaperFit,
+    x: Float,
+    y: Float,
+    modifier: Modifier = Modifier,
+) {
+    Image(
+        bitmap = bitmap,
+        contentDescription = null,
+        alignment = BiasAlignment(x * 2f - 1f, y * 2f - 1f),
+        contentScale = when (fit) {
+            WallpaperFit.FILL -> ContentScale.Crop
+            WallpaperFit.FIT -> ContentScale.Fit
+            WallpaperFit.STRETCH -> ContentScale.FillBounds
+        },
+        modifier = modifier,
+    )
 }
 
 /** The default wallpaper from the design: a deep blue sky with three soft waves. */

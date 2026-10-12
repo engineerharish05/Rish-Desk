@@ -21,7 +21,13 @@ object WallpaperStore {
     fun load(context: Context): ImageBitmap? {
         val f = file(context)
         if (!f.exists()) return null
-        return BitmapFactory.decodeFile(f.absolutePath)?.asImageBitmap()
+        return try {
+            BitmapFactory.decodeFile(f.absolutePath)?.asImageBitmap()
+        } catch (e: Exception) {
+            null
+        } catch (e: OutOfMemoryError) {
+            null
+        }
     }
 
     /** Decodes a picked photo, downsampled and rotated upright. Run off the main thread. */

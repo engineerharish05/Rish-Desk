@@ -24,10 +24,13 @@ import kotlinx.coroutines.withContext
 @Composable
 fun rememberAppIcon(app: AppInfo): LoadedIcon? {
     val context = LocalContext.current
+    // Reading the version makes visible icons reload after IconLoader.invalidate
+    val version = IconLoader.version
     val state = produceState<LoadedIcon?>(
         initialValue = IconLoader.peek(app),
         key1 = app.packageName,
         key2 = app.activityName,
+        key3 = version,
     ) {
         if (value == null) {
             value = withContext(Dispatchers.Default) {

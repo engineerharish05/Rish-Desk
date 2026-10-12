@@ -97,7 +97,8 @@ fun Modifier.dashedBorder(color: Color, radius: Dp, width: Dp = 1.5.dp): Modifie
 /** Gently scales the element up while it is pressed. */
 fun Modifier.pressScale(source: MutableInteractionSource, to: Float = 1.12f): Modifier = composed {
     val pressed by source.collectIsPressedAsState()
-    val s by animateFloatAsState(if (pressed) to else 1f, label = "pressScale")
+    val animated = LocalAnimations.current
+    val s by animateFloatAsState(if (pressed && animated) to else 1f, label = "pressScale")
     graphicsLayer {
         scaleX = s
         scaleY = s

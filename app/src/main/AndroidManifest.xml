@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Optional: lets "Open apps in landscape" turn auto-rotate off while an app opens, then restore it.
+         Android only grants this through Settings > Special app access; the launcher works without it. -->
+    <uses-permission
+        android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
 
     <!-- Wi-Fi / cellular state for the status bar -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />

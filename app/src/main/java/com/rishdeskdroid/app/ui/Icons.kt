@@ -67,6 +67,7 @@ object Ico {
             rrect(13f, 13f, 7f, 7f, 2f),
         ),
     )
+    val clock = IconDef(strokes = listOf(circle(12f, 12f, 9f), "M12 7v5l3 2"))
     val usb = IconDef(strokes = listOf("M9 3v5M15 3v5M7 8h10v4a5 5 0 0 1-10 0z", "M12 17v4"))
     val keyboard = IconDef(
         strokes = listOf(rrect(2.5f, 6f, 19f, 12f, 3f), "M7 14h10"),
