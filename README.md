@@ -6,7 +6,7 @@ A landscape-first Android launcher with a macOS-inspired frosted-glass interface
   <strong>Minimal interface · Landscape layout · Customizable launcher</strong>
 </p>
 
-[![Build](https://github.com/engineerharish05/Rish-Deskdroid/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/engineerharish05/Rish-Deskdroid/actions/workflows/build.yml)
+[![Build](https://github.com/engineerharish05/Rish-Desk/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/engineerharish05/Rish-Desk/actions/workflows/build.yml)
 [![Android](https://img.shields.io/badge/Platform-Android%208%2B-3DDC84?logo=android&logoColor=white)](https://www.android.com/)
 [![Kotlin](https://img.shields.io/badge/Language-Kotlin-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
@@ -20,12 +20,12 @@ RishDesk is an Android home-screen replacement built around a horizontal, deskto
 ## Download
 
 **Latest release-preview build:**  
-1. Open [GitHub Actions → Build RishDesk](https://github.com/engineerharish05/Rish-Deskdroid/actions/workflows/build.yml).
+1. Open [GitHub Actions → Build RishDesk](https://github.com/engineerharish05/Rish-Desk/actions/workflows/build.yml).
 2. Open the latest successful workflow run.
-3. Under **Artifacts**, download **Rish-Deskdroid-release-preview**.
+3. Under **Artifacts**, download **RishDesk-release-preview**.
 4. Extract the downloaded ZIP to get the APK.
 
-The debug APK is also available as the **Rish-Deskdroid-debug** artifact. The CI debug job runs unit tests before packaging the APK.
+The debug APK is also available as the **RishDesk-debug** artifact. The CI debug job runs unit tests before packaging the APK.
 
 ### Important signing note
 
@@ -84,7 +84,7 @@ The debug APK is written to `app/build/outputs/apk/debug/`. The release variant 
 
 ### Build on GitHub
 
-Every push to `main` that is not README-only triggers GitHub Actions. You can also start a build manually from the Actions tab. The workflow publishes debug and release-preview APK artifacts.
+Pushes to `main`, feature, integration, and release branches (except README-only changes) trigger GitHub Actions. You can also start a build manually from the Actions tab. The workflow publishes debug and release-preview APK artifacts.
 
 ## Controls
 
@@ -173,7 +173,7 @@ Build configuration and Android source paths have intentionally been left in pla
 
 ## Feedback and issues
 
-Please use [GitHub Issues](https://github.com/engineerharish05/Rish-Deskdroid/issues) to report reproducible bugs or suggest improvements. Include your Android version, device model, steps to reproduce, and relevant screenshots or logs where possible.
+Please use [GitHub Issues](https://github.com/engineerharish05/Rish-Desk/issues) to report reproducible bugs or suggest improvements. Include your Android version, device model, steps to reproduce, and relevant screenshots or logs where possible.
 
 ---
 
