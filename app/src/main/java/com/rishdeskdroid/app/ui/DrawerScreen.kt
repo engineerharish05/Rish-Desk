@@ -8,6 +8,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -179,22 +180,29 @@ private fun DrawerActionButton(label: String, onClick: () -> Unit) {
 
 @Composable
 private fun AppPage(prefs: LauncherPrefs, allApps: List<AppInfo>, items: List<AppInfo>, showHidden: Boolean) {
-    Column(
+    BoxWithConstraints(
         Modifier
             .fillMaxSize()
             .padding(horizontal = 8.dp, vertical = 4.dp),
     ) {
-        for (row in 0 until ROWS) {
-            Row(
-                Modifier.weight(1f).fillMaxWidth(),
-            ) {
-                for (col in 0 until COLUMNS) {
-                    val app = items.getOrNull(row * COLUMNS + col)
-                    Box(
-                        Modifier.weight(1f).fillMaxHeight(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        if (app != null) DrawerApp(prefs, allApps, app, showHidden)
+        // Size icons against both row height and column width so the grid remains usable on
+        // short landscape screens and narrow devices instead of clipping labels or touch targets.
+        val iconSize = minOf(
+            54.dp,
+            (maxHeight / ROWS - 24.dp).coerceAtLeast(28.dp),
+            (maxWidth / COLUMNS - 10.dp).coerceAtLeast(28.dp),
+        )
+        Column(Modifier.fillMaxSize()) {
+            for (row in 0 until ROWS) {
+                Row(Modifier.weight(1f).fillMaxWidth()) {
+                    for (col in 0 until COLUMNS) {
+                        val app = items.getOrNull(row * COLUMNS + col)
+                        Box(
+                            Modifier.weight(1f).fillMaxHeight(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (app != null) DrawerApp(prefs, allApps, app, showHidden, iconSize)
+                        }
                     }
                 }
             }
@@ -204,7 +212,7 @@ private fun AppPage(prefs: LauncherPrefs, allApps: List<AppInfo>, items: List<Ap
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun DrawerApp(prefs: LauncherPrefs, allApps: List<AppInfo>, app: AppInfo, showHidden: Boolean) {
+private fun DrawerApp(prefs: LauncherPrefs, allApps: List<AppInfo>, app: AppInfo, showHidden: Boolean, iconSize: androidx.compose.ui.unit.Dp) {
     val context = LocalContext.current
     var menu by remember { mutableStateOf(false) }
     val source = remember { MutableInteractionSource() }
@@ -227,7 +235,7 @@ private fun DrawerApp(prefs: LauncherPrefs, allApps: List<AppInfo>, app: AppInfo
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Box(contentAlignment = Alignment.TopEnd) {
-                AppIconImage(app, 54.dp)
+                AppIconImage(app, iconSize)
                 if (favorite) {
                     Text("★", color = Color(0xFFFFD76A), fontSize = 13.sp)
                 }
