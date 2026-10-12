@@ -95,4 +95,50 @@ class AppsFilterTest {
         val result = filterAndSortApps(apps, "", emptySet(), false, emptySet(), LauncherPrefs.SORT_NAME_DESC)
         assertEquals(listOf("YouTube Music", "YouTube", "Camera", "Browser"), result.map { it.label })
     }
+
+    @Test
+    fun searchTrimsWhitespaceAndMatchesUnicodeLabels() {
+        val specialApps = listOf(
+            AppInfo("தமிழ் பயன்பாடு", "com.example.tamil", "Main"),
+            AppInfo("Café Tools", "com.example.cafe", "Main"),
+            AppInfo("Emoji 🚀 Utility", "com.example.rocket", "Main"),
+        )
+
+        val tamil = filterAndSortApps(specialApps, "  தமிழ்  ", emptySet(), false, emptySet(), LauncherPrefs.SORT_NAME_ASC)
+        val accent = filterAndSortApps(specialApps, "CAFÉ", emptySet(), false, emptySet(), LauncherPrefs.SORT_NAME_ASC)
+        val emoji = filterAndSortApps(specialApps, "🚀", emptySet(), false, emptySet(), LauncherPrefs.SORT_NAME_ASC)
+
+        assertEquals(listOf("தமிழ் பயன்பாடு"), tamil.map { it.label })
+        assertEquals(listOf("Café Tools"), accent.map { it.label })
+        assertEquals(listOf("Emoji 🚀 Utility"), emoji.map { it.label })
+    }
+
+    @Test
+    fun whitespaceOnlySearchReturnsAllNonHiddenApps() {
+        val result = filterAndSortApps(
+            apps = apps,
+            query = "   ",
+            hiddenPackages = setOf("com.example.camera"),
+            showHidden = false,
+            favoritePackages = emptySet(),
+            sort = LauncherPrefs.SORT_NAME_ASC,
+        )
+
+        assertEquals(listOf("Browser", "YouTube", "YouTube Music"), result.map { it.label })
+    }
+
+    @Test
+    fun largeAppListsRemainCompleteAndSearchReturnsOnlyMatches() {
+        val manyApps = (1..250).map { index ->
+            AppInfo("Utility %03d".format(index), "com.example.utility$index", "Main")
+        }
+
+        val all = filterAndSortApps(manyApps, "", emptySet(), false, emptySet(), LauncherPrefs.SORT_NAME_ASC)
+        val matches = filterAndSortApps(manyApps, "utility 24", emptySet(), false, emptySet(), LauncherPrefs.SORT_NAME_ASC)
+
+        assertEquals(250, all.size)
+        assertEquals(10, matches.size)
+        assertEquals("Utility 240", matches.first().label)
+        assertEquals("Utility 249", matches.last().label)
+    }
 }
