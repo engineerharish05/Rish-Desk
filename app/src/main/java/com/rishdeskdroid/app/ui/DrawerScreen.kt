@@ -21,6 +21,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
@@ -34,6 +36,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -68,6 +72,7 @@ fun DrawerScreen(
     var query by remember { mutableStateOf("") }
     var showHidden by remember { mutableStateOf(false) }
     var showSortMenu by remember { mutableStateOf(false) }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     val visibleApps = remember(apps, query, showHidden, prefs.hiddenPackages, prefs.favoritePackages, prefs.appSort) {
         filterAndSortApps(
@@ -97,23 +102,42 @@ fun DrawerScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Box(
+            Row(
                 Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(14.dp))
                     .background(Color.White.copy(alpha = 0.14f))
                     .padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (query.isEmpty()) {
-                    Text("Search apps", color = Color.White.copy(alpha = 0.62f), fontSize = 14.sp)
+                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                    if (query.isEmpty()) {
+                        Text("Search apps", color = Color.White.copy(alpha = 0.62f), fontSize = 14.sp)
+                    }
+                    BasicTextField(
+                        value = query,
+                        onValueChange = { query = it },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() }),
+                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 14.sp),
+                        modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Search applications" },
+                    )
                 }
-                BasicTextField(
-                    value = query,
-                    onValueChange = { query = it },
-                    singleLine = true,
-                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 14.sp),
-                    modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Search applications" },
-                )
+                if (query.isNotEmpty()) {
+                    Text(
+                        text = "×",
+                        color = Color.White,
+                        fontSize = 22.sp,
+                        modifier = Modifier
+                            .padding(start = 10.dp)
+                            .clickable {
+                                query = ""
+                                keyboardController?.hide()
+                            }
+                            .semantics { contentDescription = "Clear app search" },
+                    )
+                }
             }
             Box {
                 DrawerActionButton(
