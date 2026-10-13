@@ -8,7 +8,9 @@ class GlassOpacityPreferenceTest {
     @Test
     fun valuesInsideSupportedRangeArePreserved() {
         assertEquals(0f, sanitizeGlassOpacity(0f), 0f)
+        assertEquals(0.001f, sanitizeGlassOpacity(0.001f), 0f)
         assertEquals(0.35f, sanitizeGlassOpacity(0.35f), 0f)
+        assertEquals(0.999f, sanitizeGlassOpacity(0.999f), 0f)
         assertEquals(1f, sanitizeGlassOpacity(1f), 0f)
     }
 
