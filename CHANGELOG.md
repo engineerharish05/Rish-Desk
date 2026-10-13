@@ -1,19 +1,14 @@
 # Changelog
 
-Notable changes to Rish Deskdroid are recorded here.
+Notable changes to RishDesk are recorded here. Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
-### Changed
-- Settings is now a list of sections; each opens on its own page with a back button. Privacy and permissions is last.
-- Wallpaper has its own page with "Change wallpaper" and "Customize" (dim and blur). The old fit and position sliders are gone.
-- Choosing a wallpaper opens a full-screen editor: drag to move, pinch to zoom, then tap Set. The saved wallpaper is cropped exactly as you see it.
-- Glass surfaces and dialogs have a soft sheen and a bright rim.
+Nothing yet.
 
-### Added
-- Opening screen: the RishDesk icon in the middle and "Made by" with the Rish Innovations logo at the bottom centre. It shows when the launcher starts.
+## 1.1.0 — 2026-10-15
 
-## 1.1.0 — 2026-10-11
+First public release.
 
 ### Changed
 - The app is now called **RishDesk**, with your RD artwork as the adaptive icon (black on cream, plus a monochrome layer for themed icons). The application ID is unchanged, so this installs over the previous build.
@@ -21,23 +16,29 @@ Notable changes to Rish Deskdroid are recorded here.
 
 ### Added
 - Home screen: configurable grid (default 5 x 4), drag-and-drop shortcuts, folders (create, rename, add, remove), custom labels, resizable widgets that follow each widget's own size limits, edit mode.
-- App drawer: search with clear button and empty state, All / Favorites / Recent filters, sort (A-Z, Z-A, newest, recent), favorites, hide and restore apps, configurable grid and icon size, long-press menu (Add to Home, dock, favorite, hide, App info, Uninstall with confirmation).
-- Dock: move, remove, alignment, size, optional recent-apps panel (launcher-tracked, no extra permission), OTG tile that opens Android's USB/storage screen.
-- Settings: accent colour, animations, date in status bar, Android status bar toggle, wallpaper fit / position / dim / blur, hidden apps, reset appearance / desktop / dock / everything (with confirmation), shortcuts for Wi-Fi, Bluetooth, Display, Storage, Files, Developer options, default-launcher chooser.
+- App drawer: search with clear button and empty state, All / Favorites filters, A-Z order, favorites, hide and restore apps, configurable grid and icon size, long-press menu (Add to Home, dock, favorite, hide, App info, Uninstall with confirmation).
+- Dock: move, remove, alignment, size, OTG tile that opens Android's USB/storage screen.
+- Settings: accent colour, animations, date in status bar, Android status bar toggle, wallpaper dim / blur, hidden apps, reset appearance / desktop / dock / everything (with confirmation), shortcuts for Wi-Fi, Bluetooth, Display, Storage, Files, Developer options, default-launcher chooser.
 - Keyboard: Ctrl, Alt or Win + D / F / / / , / H / 1-9, Esc, arrow keys and Tab focus, Enter to open. Enabled by default.
 - Optional "Open apps in landscape" (needs the Modify system settings permission; rotation is restored afterwards).
 - Unit tests for the home layout rules and widget size limits.
 
+### Also in this release
+- Settings is a list of sections, each on its own page with a back button; Privacy and permissions is last.
+- Wallpaper editor: drag to move, pinch to zoom, tap Set. Dim and blur have their own page.
+- Frosted-glass surfaces with a soft sheen and bright rim.
+- Opening screen with the RishDesk icon and "Made by" Rish Innovations branding.
+
 ### Fixed
 - Debounced, race-safe app list reloads on install, update and removal; icons refresh after an update; home and dock entries for uninstalled apps are pruned.
 
-### Removed
-- The drawer's sort menu and Recent filter, the dock's recent-apps button, and their Settings entries. The drawer is always A to Z.
+### Removed during development
+- Drawer sorting and the Recent filter, the dock's recent-apps button, and the welcome card were removed before release. The drawer is always A to Z.
 
 ### Known limits (Android does not allow these for a launcher)
 - A launcher cannot force a portrait-only app into landscape, show a taskbar of running apps, or be a full file manager. Files / Storage / Terminal shortcuts and a recent-apps panel are provided instead.
 - Dragging a shortcut to a different home page is not supported yet; drops work within a page.
-- This build has not yet been compiled or tested on a device; CI will run the unit tests and build the APK.
+- Tested mainly on one device (Realme C61, Android 16). Please report issues on other devices.
 
 ## 1.0.0-preview — 2026-10-10
 

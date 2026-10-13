@@ -1,0 +1,81 @@
+name: Release RishDesk
+
+# Publishes a GitHub Release with a signed APK when a version tag (for example v1.1.0) is pushed.
+# Signing secrets (repository Settings -> Secrets and variables -> Actions):
+#   RELEASE_KEYSTORE_BASE64, RELEASE_KEYSTORE_PASSWORD, RELEASE_KEY_ALIAS, RELEASE_KEY_PASSWORD
+# Without them the APK is signed with a temporary key and the release is marked as a pre-release.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to release (for example v1.1.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+      KS_B64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+      KS_PASS: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+      KS_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+      KEY_PASS: ${{ secrets.RELEASE_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Check the tag matches the app version
+        run: |
+          VERSION="$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)"
+          test "v$VERSION" = "$TAG" || { echo "::error::Tag $TAG does not match versionName $VERSION"; exit 1; }
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+      - name: Run unit tests and build release APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon testDebugUnitTest assembleRelease
+      - name: Sign APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          KEYSTORE="$RUNNER_TEMP/release.jks"
+          if [ -n "${KS_B64:-}" ]; then
+            echo "$KS_B64" | base64 -d > "$KEYSTORE"
+            echo "PRERELEASE=false" >> "$GITHUB_ENV"
+          else
+            echo "::warning::No release keystore secrets found; signing with a temporary key (pre-release)."
+            KS_PASS="$(openssl rand -hex 16)"; KEY_PASS="$KS_PASS"; KS_ALIAS=temp
+            keytool -genkeypair -keystore "$KEYSTORE" -storepass "$KS_PASS" -keypass "$KEY_PASS" \
+              -alias "$KS_ALIAS" -keyalg RSA -keysize 2048 -validity 3650 -dname "CN=RishDesk Temporary"
+            echo "PRERELEASE=true" >> "$GITHUB_ENV"
+          fi
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          mkdir -p dist
+          OUT="dist/RishDesk-${VERSION}.apk"
+          "$APKSIGNER" sign --ks "$KEYSTORE" --ks-key-alias "$KS_ALIAS" \
+            --ks-pass "pass:$KS_PASS" --key-pass "pass:$KEY_PASS" \
+            --out "$OUT" app/build/outputs/apk/release/RishDesk-release-unsigned.apk
+          "$APKSIGNER" verify --verbose --print-certs "$OUT" | tee dist/signing-certificate.txt
+          (cd dist && sha256sum "RishDesk-${VERSION}.apk" > "RishDesk-${VERSION}.apk.sha256")
+          rm -f "$KEYSTORE"
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES="docs/releases/${TAG}.md"
+          ARGS=(--title "RishDesk ${VERSION}" --verify-tag)
+          if [ -f "$NOTES" ]; then ARGS+=(--notes-file "$NOTES"); else ARGS+=(--generate-notes); fi
+          if [ "$PRERELEASE" = "true" ]; then ARGS+=(--prerelease); fi
+          gh release create "$TAG" "${ARGS[@]}" \
+            "dist/RishDesk-${VERSION}.apk" "dist/RishDesk-${VERSION}.apk.sha256"
