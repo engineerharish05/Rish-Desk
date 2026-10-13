@@ -60,6 +60,7 @@ This file is the source of truth for the feature-by-feature implementation loop.
 ## 8. Settings and configuration
 - [ ] Make every visible setting change real application behavior, or clearly label unsupported options.
 - [ ] Persist settings and validate values before saving.
+- Progress note (2026-10-13): Glass opacity is clamped on update and sanitized when loaded; validation of other persisted settings remains unfinished.
 - [ ] Add confirmation for destructive/reset actions.
 - [ ] Explain why special permissions are requested and provide a route to the relevant Android settings page.
 - [ ] Verify all settings survive process death and device restart where applicable.
