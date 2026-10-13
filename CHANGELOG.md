@@ -20,6 +20,9 @@ Notable changes to Rish Deskdroid are recorded here.
 ### Fixed
 - Debounced, race-safe app list reloads on install, update and removal; icons refresh after an update; home and dock entries for uninstalled apps are pruned.
 
+### Removed
+- The drawer's sort menu and Recent filter, the dock's recent-apps button, and their Settings entries. The drawer is always A to Z.
+
 ### Known limits (Android does not allow these for a launcher)
 - A launcher cannot force a portrait-only app into landscape, show a taskbar of running apps, or be a full file manager. Files / Storage / Terminal shortcuts and a recent-apps panel are provided instead.
 - Dragging a shortcut to a different home page is not supported yet; drops work within a page.

@@ -286,12 +286,6 @@ fun SettingsScreen(
 
             // ---- App drawer -------------------------------------------------------------------
             Section("App drawer", prefs) {
-                SettingBlock(Ico.grid, Tiles.blue, "Sort order", "Recently used only counts apps opened from this launcher, so no extra permission is needed") {
-                    Row(Modifier.horizontalScroll(rememberScrollState())) {
-                        Segmented(SortMode.entries, prefs.sortMode, { it.label }) { prefs.updateSortMode(it) }
-                    }
-                }
-                RowDivider()
                 SettingRow(Ico.grid, Tiles.graphite, "Columns") {
                     Stepper(prefs.drawerColumns, 3, 8, "drawer columns") {
                         prefs.updateDrawerGrid(it, prefs.drawerRows)
@@ -321,13 +315,6 @@ fun SettingsScreen(
                 SettingRow(Ico.close, Tiles.red, "Hidden apps", "${prefs.hiddenApps.size} hidden. They stay installed.") {
                     GlassButton("Manage") { showHidden = true }
                 }
-                RowDivider()
-                SettingRow(Ico.clock, Tiles.blue, "Recent apps", "Forget the list of apps opened from here") {
-                    GlassButton("Clear") {
-                        RecentStore.clear(context)
-                        android.widget.Toast.makeText(context, "Recent apps cleared", android.widget.Toast.LENGTH_SHORT).show()
-                    }
-                }
             }
 
             // ---- Dock and taskbar -------------------------------------------------------------
@@ -344,10 +331,6 @@ fun SettingsScreen(
                         valueRange = 0.8f..1.3f,
                         modifier = Modifier.widthIn(max = 320.dp).weight(1f, fill = false),
                     )
-                }
-                RowDivider()
-                SettingRow(Ico.clock, Tiles.sky, "Recent apps button", "Shows a recent-apps panel in the dock") {
-                    GlassSwitch(prefs.showRecentsButton, { prefs.updateShowRecentsButton(it) }, "Recent apps button")
                 }
                 RowDivider()
                 SettingRow(Ico.exit, Tiles.red, "Dock apps", "Long-press a dock app to move or remove it. Restore the default apps here.") {

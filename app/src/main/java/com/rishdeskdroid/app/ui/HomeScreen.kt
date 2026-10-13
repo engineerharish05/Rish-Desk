@@ -930,13 +930,6 @@ private fun Dock(
             }
         }
 
-        // Recent apps
-        if (prefs.showRecentsButton) {
-            IconTile(tile, Tiles.sky, "Recent apps", onClick = onRecents) {
-                SvgIcon(Ico.clock, tile * 0.54f)
-            }
-        }
-
         // + add an app
         IconTile(
             size = tile,

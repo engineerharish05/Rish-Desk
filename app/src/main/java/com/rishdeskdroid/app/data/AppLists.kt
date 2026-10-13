@@ -40,10 +40,10 @@ fun drawerApps(prefs: LauncherPrefs, apps: List<AppInfo>, filter: DrawerFilter, 
     val text = query.trim()
     val matching = if (text.isEmpty()) visible else visible.filter { it.label.contains(text, ignoreCase = true) }
     return when (filter) {
-        DrawerFilter.ALL -> sortApps(matching, prefs.sortMode)
+        DrawerFilter.ALL -> sortApps(matching, SortMode.AZ)
         DrawerFilter.FAVORITES -> {
             val favorites = prefs.favorites.toHashSet()
-            sortApps(matching.filter { it.packageName in favorites }, prefs.sortMode)
+            sortApps(matching.filter { it.packageName in favorites }, SortMode.AZ)
         }
         DrawerFilter.RECENT -> RecentStore.recents.mapNotNull { pkg -> matching.firstOrNull { it.packageName == pkg } }
     }
