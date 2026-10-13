@@ -7,6 +7,13 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
+/**
+ * Keeps persisted or externally supplied opacity values finite and within the supported range.
+ * Invalid floating-point values fall back to the launcher's default opacity.
+ */
+fun sanitizeGlassOpacity(value: Float): Float =
+    if (value.isFinite()) value.coerceIn(0f, 1f) else 0.6f
+
 /** One app shortcut on the home screen. */
 data class HomeShortcut(val slot: Int, val packageName: String)
 
@@ -32,7 +39,7 @@ class LauncherPrefs(context: Context) {
         private set
 
     /** Settings > Glass Opacity, 0f..1f */
-    var glassOpacity by mutableFloatStateOf(sp.getFloat(K_GLASS, 0.6f))
+    var glassOpacity by mutableFloatStateOf(sanitizeGlassOpacity(sp.getFloat(K_GLASS, 0.6f)))
         private set
 
     /** Bumped whenever the wallpaper file changes so the UI reloads it. */
@@ -79,7 +86,7 @@ class LauncherPrefs(context: Context) {
     }
 
     fun updateGlassOpacity(value: Float) {
-        val v = value.coerceIn(0f, 1f)
+        val v = sanitizeGlassOpacity(value)
         glassOpacity = v
         sp.edit().putFloat(K_GLASS, v).apply()
     }
