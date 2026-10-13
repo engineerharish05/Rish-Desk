@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Rish Deskdroid"
+rootProject.name = "RishDesk"
 include(":app")

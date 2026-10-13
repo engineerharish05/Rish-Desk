@@ -1,9 +1,9 @@
-# Rish Deskdroid — Feature Roadmap and Acceptance Checklist
+# RishDesk — Feature Roadmap and Acceptance Checklist
 
 This file is the source of truth for the feature-by-feature implementation loop. A feature is not complete merely because its UI exists: it needs implementation, error handling, automated checks where practical, and documented device-test requirements. Keep status accurate and update this file with every feature pull request.
 
 ## 1. Launcher foundation and app lifecycle
-- [ ] Set Rish Deskdroid as the Android Home app and handle Home/Recents/lifecycle transitions safely.
+- [ ] Set RishDesk as the Android Home app and handle Home/Recents/lifecycle transitions safely.
 - [ ] Discover launchable applications and refresh on package install, update, removal, and enable/disable events.
 - [ ] Launch applications reliably; handle missing launch intents, work profiles, and uninstalled packages without crashing.
 - [ ] Persist user preferences and recover from corrupted, missing, or outdated preference values.

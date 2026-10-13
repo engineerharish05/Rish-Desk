@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- RishDesk "RD" monogram, traced exactly from the supplied artwork (black on cream). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Vector-traced from the supplied RD logo. Even-odd fill keeps the letter counters transparent. -->
     <path
-        android:fillColor="#FF000000"
+        android:fillColor="#000000"
         android:fillType="evenOdd"
-        android:pathData="M 61.07,33.17 56.92,41.00 56.92,74.72 81.00,74.78 89.94,57.89 89.94,33.17 Z M 64.81,40.94 82.05,40.94 82.17,41.06 82.17,57.94 77.32,67.00 64.81,67.00 64.69,66.89 64.69,41.06 Z M 22.15,33.17 18.00,40.94 18.00,74.78 21.62,74.78 25.77,66.94 25.83,57.83 43.13,57.83 43.19,74.72 50.96,74.78 50.96,57.89 46.87,50.17 46.17,50.00 50.96,41.06 50.96,33.17 Z M 25.77,50.06 25.83,40.94 43.07,40.94 43.19,41.06 38.40,50.06 Z" />
+        android:pathData="M26.64,36.06 L51.48,36.06 L51.48,42.85 L47.37,50.6 L47.93,50.6 L51.48,57.36 L51.48,71.94 L44.73,71.94 L44.73,57.36 L29.83,57.36 L29.83,65.15 L26.24,71.94 L23.04,71.94 L23.04,42.85 Z M29.83,42.85 L44.73,42.85 L40.62,50.6 L29.83,50.6 Z M60.11,36.06 L85.0,36.06 L85.0,57.36 L77.29,71.94 L56.56,71.94 L56.56,42.85 Z M63.31,42.85 L78.25,42.85 L78.25,57.36 L74.13,65.15 L63.31,65.15 Z" />
 </vector>

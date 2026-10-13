@@ -22,10 +22,10 @@ RishDesk is an Android home-screen replacement built around a horizontal, deskto
 **Latest release-preview build:**  
 1. Open [GitHub Actions → Build RishDesk](https://github.com/engineerharish05/Rish-Deskdroid/actions/workflows/build.yml).
 2. Open the latest successful workflow run.
-3. Under **Artifacts**, download **Rish-Deskdroid-release-preview**.
+3. Under **Artifacts**, download **RishDesk-release-preview**.
 4. Extract the downloaded ZIP to get the APK.
 
-The debug APK is also available as the **Rish-Deskdroid-debug** artifact. The CI debug job runs unit tests before packaging the APK.
+The debug APK is also available as the **RishDesk-debug** artifact. The CI debug job runs unit tests before packaging the APK.
 
 ### Important signing note
 
@@ -178,3 +178,15 @@ Please use [GitHub Issues](https://github.com/engineerharish05/Rish-Deskdroid/is
 ---
 
 <p align="center">Designed by Harish P · RishDesk</p>
+
+## Version 1.1.0 highlights
+Folders and drag-and-drop on a configurable home grid, a searchable drawer with favorites / hidden apps / sorting, a resizable-widget strip, wallpaper fit / position / dim / blur, accent colours, keyboard navigation, and reset options. See CHANGELOG.md for the full list and the limits Android imposes on launchers.
+
+## Names and identifiers
+| Item | Value |
+| --- | --- |
+| Product name (shown on the phone) | RishDesk |
+| Repository | `engineerharish05/Rish-Desk` (GitHub redirects the old `Rish-Deskdroid` address) |
+| Gradle project name | RishDesk |
+| Kotlin package / Android application ID | `com.rishdeskdroid.app` (kept so existing installs update in place and keep their settings) |
+| Debug APK | `RishDesk-debug.apk` |
