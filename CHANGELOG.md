@@ -11,7 +11,7 @@ Notable changes to Rish Deskdroid are recorded here.
 - Glass surfaces and dialogs have a soft sheen and a bright rim.
 
 ### Added
-- A welcome card with the Rish Innovations logo each time RishDesk starts (can be turned off in Appearance).
+- Opening screen: the RishDesk icon in the middle and "Made by" with the Rish Innovations logo at the bottom centre. It shows when the launcher starts.
 
 ## 1.1.0 — 2026-10-11
 

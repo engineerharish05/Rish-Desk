@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.RishDeskdroid" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/launcher_bg</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <!-- System opening screen (Android 12+): dark background with the app icon, followed by the in-app opening screen -->
+        <item name="android:windowSplashScreenBackground">#05060A</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">#FEFFEF</item>
+    </style>
+</resources>

@@ -90,7 +90,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 enum class SettingsPage(val title: String, val subtitle: String) {
-    APPEARANCE("Appearance", "Glass, accent colour, animations, greeting"),
+    APPEARANCE("Appearance", "Glass, accent colour, animations"),
     WALLPAPER("Wallpaper", "Change the photo, then customize it"),
     WALLPAPER_CUSTOMIZE("Customize wallpaper", "Dim and blur"),
     DESKTOP("Desktop", "Grid, icon size, labels, edit layout"),
@@ -323,10 +323,6 @@ fun SettingsScreen(
                 RowDivider()
                 SettingRow(Ico.sliders, Tiles.graphite, "Animations", "Turn off to reduce motion") {
                     GlassSwitch(prefs.animations, { prefs.updateAnimations(it) }, "Animations")
-                }
-                RowDivider()
-                SettingRow(Ico.image, Tiles.sky, "Welcome card", "Greeting with the Rish Innovations logo each time RishDesk starts") {
-                    GlassSwitch(prefs.showGreeting, { prefs.updateShowGreeting(it) }, "Welcome card")
                 }
                 RowDivider()
                 SettingRow(Ico.clock, Tiles.blue, "Show date", "Adds the date next to the time in the status bar") {

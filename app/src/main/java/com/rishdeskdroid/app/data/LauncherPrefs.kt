@@ -152,9 +152,6 @@ class LauncherPrefs(context: Context) {
     var animations by mutableStateOf(sp.getBoolean(K_ANIM, true))
         private set
     var showDate by mutableStateOf(sp.getBoolean(K_DATE, false))
-
-    /** The welcome card with the Rish Innovations logo, shown once each time the launcher starts. */
-    var showGreeting by mutableStateOf(sp.getBoolean(K_GREETING, true))
         private set
     var showSystemStatusBar by mutableStateOf(sp.getBoolean(K_SYS_BAR, false))
         private set
@@ -324,11 +321,6 @@ class LauncherPrefs(context: Context) {
         sp.edit().putBoolean(K_ANIM, v).apply()
     }
 
-    fun updateShowGreeting(v: Boolean) {
-        showGreeting = v
-        sp.edit().putBoolean(K_GREETING, v).apply()
-    }
-
     fun updateShowDate(v: Boolean) {
         showDate = v
         sp.edit().putBoolean(K_DATE, v).apply()
@@ -378,7 +370,6 @@ class LauncherPrefs(context: Context) {
         updateAccent(ACCENT_COLORS[0])
         updateAnimations(true)
         updateShowDate(false)
-        updateShowGreeting(true)
         updateWallpaperFit(WallpaperFit.FILL)
         updateWallpaperPosition(0.5f, 0.5f)
         updateWallpaperDim(0f)
@@ -510,7 +501,6 @@ class LauncherPrefs(context: Context) {
         const val K_ACCENT = "accent_color"
         const val K_ANIM = "animations"
         const val K_DATE = "show_date"
-        const val K_GREETING = "show_greeting"
         const val K_SYS_BAR = "show_system_status_bar"
         const val K_LANDSCAPE_APPS = "landscape_apps"
         const val K_WINDOWED = "windowed_apps"
