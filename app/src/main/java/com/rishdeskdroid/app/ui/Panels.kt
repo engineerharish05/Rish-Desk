@@ -89,7 +89,17 @@ fun GlassDialog(
             modifier
                 .fillMaxWidth(widthFraction)
                 .heightIn(max = maxHeight)
-                .background(PanelSurface, RoundedCornerShape(24.dp))
+                .background(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xF2202559), PanelSurface)),
+                    RoundedCornerShape(24.dp),
+                )
+                .border(
+                    1.dp,
+                    androidx.compose.ui.graphics.Brush.linearGradient(
+                        listOf(Color.White.copy(alpha = 0.40f), Color.White.copy(alpha = 0.06f)),
+                    ),
+                    RoundedCornerShape(24.dp),
+                )
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             content = content,

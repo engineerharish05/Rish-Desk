@@ -156,6 +156,8 @@ fun LauncherRoot(
                         .windowInsetsPadding(sides),
                 )
             }
+
+            GreetingOverlay(enabled = prefs.showGreeting)
         }
     }
 }

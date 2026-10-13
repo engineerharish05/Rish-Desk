@@ -1,6 +1,10 @@
 package com.rishdeskdroid.app.ui
 
 import android.net.Uri
+import com.rishdeskdroid.app.R
+import androidx.compose.ui.res.painterResource
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -85,6 +89,83 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+enum class SettingsPage(val title: String, val subtitle: String) {
+    APPEARANCE("Appearance", "Glass, accent colour, animations, greeting"),
+    WALLPAPER("Wallpaper", "Change the photo, then customize it"),
+    WALLPAPER_CUSTOMIZE("Customize wallpaper", "Dim and blur"),
+    DESKTOP("Desktop", "Grid, icon size, labels, edit layout"),
+    DRAWER("App drawer", "Grid, icon size, hidden apps"),
+    DOCK("Dock and taskbar", "Position, size, reset"),
+    WIDGETS("Widgets", "Add or remove home widgets"),
+    KEYBOARD("Keyboard and mouse", "Shortcuts for an external keyboard"),
+    DEVICES("USB, OTG and files", "OTG shortcut, files and storage"),
+    SYSTEM("System and apps", "Default launcher, Android settings"),
+    RESET("Reset", "Put settings back to their defaults"),
+    PRIVACY("Privacy and permissions", "What RishDesk can access and why"),
+}
+
+/** The settings list, in the order it is shown. Privacy and permissions is always last. */
+private val SETTINGS_LIST = listOf(
+    SettingsPage.APPEARANCE, SettingsPage.WALLPAPER, SettingsPage.DESKTOP, SettingsPage.DRAWER,
+    SettingsPage.DOCK, SettingsPage.WIDGETS, SettingsPage.KEYBOARD, SettingsPage.DEVICES,
+    SettingsPage.SYSTEM, SettingsPage.RESET, SettingsPage.PRIVACY,
+)
+
+private fun badgeFor(page: SettingsPage): Pair<IconDef, Brush> = when (page) {
+    SettingsPage.APPEARANCE -> Ico.drop to Tiles.sky
+    SettingsPage.WALLPAPER, SettingsPage.WALLPAPER_CUSTOMIZE -> Ico.image to Tiles.pink
+    SettingsPage.DESKTOP -> Ico.grid to Tiles.blue
+    SettingsPage.DRAWER -> Ico.grid to Tiles.graphite
+    SettingsPage.DOCK -> Ico.sliders to Tiles.gray
+    SettingsPage.WIDGETS -> Ico.widgets to Tiles.blue
+    SettingsPage.KEYBOARD -> Ico.keyboard to Tiles.graphite
+    SettingsPage.DEVICES -> Ico.usb to Tiles.green
+    SettingsPage.SYSTEM -> Ico.gear to Tiles.gray
+    SettingsPage.RESET -> Ico.exit to Tiles.red
+    SettingsPage.PRIVACY -> Ico.gear to Tiles.graphite
+}
+
+@Composable
+private fun ColumnScope.SettingsHome(prefs: LauncherPrefs, onOpen: (SettingsPage) -> Unit) {
+    SETTINGS_LIST.chunked(2).forEach { pair ->
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            pair.forEach { target ->
+                val (icon, brush) = badgeFor(target)
+                Row(
+                    Modifier
+                        .weight(1f)
+                        .glass(RoundedCornerShape(20.dp), prefs.glassOpacity)
+                        .clickable(onClickLabel = "Open ${target.title}", role = Role.Button) { onOpen(target) }
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    IconBadge(icon, brush)
+                    TitleBlock(target.title, target.subtitle, Modifier.weight(1f))
+                    Text("›", color = Color.White.copy(alpha = 0.8f), fontSize = 26.sp)
+                }
+            }
+            if (pair.size == 1) Spacer(Modifier.weight(1f))
+        }
+    }
+    Spacer(Modifier.height(4.dp))
+    Image(
+        painter = painterResource(R.drawable.rish_logo),
+        contentDescription = "Rish Innovations",
+        modifier = Modifier
+            .align(Alignment.CenterHorizontally)
+            .widthIn(max = 200.dp)
+            .padding(vertical = 8.dp),
+    )
+    Text(
+        "RishDesk by Rish Innovations",
+        color = Color.White.copy(alpha = 0.75f),
+        fontSize = 13.sp,
+        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        modifier = Modifier.fillMaxWidth(),
+    )
+}
+
 private enum class ResetKind(val title: String, val message: String, val confirm: String) {
     APPEARANCE(
         "Reset appearance?",
@@ -123,7 +204,8 @@ fun SettingsScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showWidgetPicker by remember { mutableStateOf(false) }
-    var showWallpaper by remember { mutableStateOf(false) }
+    var page by rememberSaveable { mutableStateOf<SettingsPage?>(null) }
+    var choosing by remember { mutableStateOf(false) }
     var showHidden by remember { mutableStateOf(false) }
     var reset by remember { mutableStateOf<ResetKind?>(null) }
 
@@ -138,14 +220,15 @@ fun SettingsScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // Wallpaper: the photo picked but not applied yet
-    var pending by remember { mutableStateOf<ImageBitmap?>(null) }
+    // Wallpaper: the photo picked, waiting in the editor until the user taps Set
     var pendingRaw by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
     val current by produceState<ImageBitmap?>(initialValue = null, key1 = prefs.wallpaperVersion) {
         value = withContext(Dispatchers.IO) { WallpaperStore.load(context) }
     }
     val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        if (uri != null && showWallpaper) {
+        val wasChoosing = choosing
+        choosing = false
+        if (uri != null && wasChoosing) {
             scope.launch {
                 val bitmap = try {
                     withContext(Dispatchers.IO) { WallpaperStore.decode(context, uri) }
@@ -156,12 +239,16 @@ fun SettingsScreen(
                 }
                 if (bitmap != null) {
                     pendingRaw = bitmap
-                    pending = bitmap.asImageBitmap()
                 } else {
                     android.widget.Toast.makeText(context, "That image can't be used as a wallpaper", android.widget.Toast.LENGTH_SHORT).show()
                 }
             }
         }
+    }
+
+    // Back goes from a settings page to the list; the launcher's own back handler leaves Settings
+    BackHandler(enabled = page != null) {
+        page = if (page == SettingsPage.WALLPAPER_CUSTOMIZE) SettingsPage.WALLPAPER else null
     }
 
     Column(
@@ -171,14 +258,25 @@ fun SettingsScreen(
             .pointerInput(Unit) { detectTapGestures { } }
             .padding(horizontal = 28.dp),
     ) {
-        Text(
-            "Settings",
-            color = Color.White,
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            style = LabelStyle,
-            modifier = Modifier.padding(top = 6.dp, bottom = 8.dp),
-        )
+        val currentPage = page
+        Row(
+            Modifier.padding(top = 6.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            if (currentPage != null) {
+                StepButton("‹", "Back to settings list", true) {
+                    page = if (currentPage == SettingsPage.WALLPAPER_CUSTOMIZE) SettingsPage.WALLPAPER else null
+                }
+            }
+            Text(
+                currentPage?.title ?: "Settings",
+                color = Color.White,
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold,
+                style = LabelStyle,
+            )
+        }
 
         Column(
             Modifier
@@ -187,7 +285,9 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            // ---- Appearance -------------------------------------------------------------------
+            when (page) {
+                null -> SettingsHome(prefs, onOpen = { page = it })
+                SettingsPage.APPEARANCE -> {
             Section("Appearance", prefs) {
                 SettingRow(Ico.drop, Tiles.sky, "Glass Opacity") {
                     GlassSlider(
@@ -225,6 +325,10 @@ fun SettingsScreen(
                     GlassSwitch(prefs.animations, { prefs.updateAnimations(it) }, "Animations")
                 }
                 RowDivider()
+                SettingRow(Ico.image, Tiles.sky, "Welcome card", "Greeting with the Rish Innovations logo each time RishDesk starts") {
+                    GlassSwitch(prefs.showGreeting, { prefs.updateShowGreeting(it) }, "Welcome card")
+                }
+                RowDivider()
                 SettingRow(Ico.clock, Tiles.blue, "Show date", "Adds the date next to the time in the status bar") {
                     GlassSwitch(prefs.showDate, { prefs.updateShowDate(it) }, "Show date")
                 }
@@ -240,8 +344,8 @@ fun SettingsScreen(
                     GlassButton("Open") { openNotificationSettings(context) }
                 }
             }
-
-            // ---- Desktop ----------------------------------------------------------------------
+                }
+                SettingsPage.DESKTOP -> {
             Section("Desktop", prefs) {
                 SettingRow(Ico.grid, Tiles.blue, "Layout editing", "Drag icons to move them. Drop one on another to make a folder.") {
                     GlassButton("Edit layout", primary = true, onClick = onEditLayout)
@@ -283,8 +387,8 @@ fun SettingsScreen(
                     GlassSwitch(prefs.showDesktopLabels, { prefs.updateShowDesktopLabels(it) }, "Desktop labels")
                 }
             }
-
-            // ---- App drawer -------------------------------------------------------------------
+                }
+                SettingsPage.DRAWER -> {
             Section("App drawer", prefs) {
                 SettingRow(Ico.grid, Tiles.graphite, "Columns") {
                     Stepper(prefs.drawerColumns, 3, 8, "drawer columns") {
@@ -316,8 +420,8 @@ fun SettingsScreen(
                     GlassButton("Manage") { showHidden = true }
                 }
             }
-
-            // ---- Dock and taskbar -------------------------------------------------------------
+                }
+                SettingsPage.DOCK -> {
             Section("Dock and taskbar", prefs) {
                 SettingBlock(Ico.grid, Tiles.blue, "Dock position") {
                     Segmented(DockAlign.entries, prefs.dockAlign, { it.label }) { prefs.updateDockAlign(it) }
@@ -337,8 +441,8 @@ fun SettingsScreen(
                     GlassButton("Reset dock") { reset = ResetKind.DOCK }
                 }
             }
-
-            // ---- Widgets ----------------------------------------------------------------------
+                }
+                SettingsPage.WIDGETS -> {
             Section("Widgets", prefs) {
                 SettingRow(Ico.widgets, Tiles.blue, "Widgets", "Use Edit layout on the home screen to move or resize them") {
                     Row(
@@ -361,51 +465,50 @@ fun SettingsScreen(
                     GlassSwitch(prefs.widgetsEnabled, { prefs.updateWidgetsEnabled(it) }, "Widgets")
                 }
             }
-
-            // ---- Wallpaper --------------------------------------------------------------------
+                }
+                SettingsPage.WALLPAPER -> {
             Section("Wallpaper", prefs) {
-                SettingRow(Ico.image, Tiles.pink, "Wallpaper change", "Tap the preview to choose a photo") {
-                    val thumbShape = RoundedCornerShape(8.dp)
-                    val shown = current
+                val thumbShape = RoundedCornerShape(14.dp)
+                Row(
+                    Modifier.padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(18.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Box(
                         Modifier
-                            .size(width = 84.dp, height = 48.dp)
+                            .weight(1f)
+                            .aspectRatio(16f / 9f)
                             .clip(thumbShape)
                             .border(1.dp, Color.White.copy(alpha = 0.5f), thumbShape)
-                            .clickable(onClickLabel = "Open wallpaper controls", role = Role.Button) { showWallpaper = true }
-                            .semantics { contentDescription = "Wallpaper preview. Tap to change wallpaper" },
+                            .semantics { contentDescription = "Current wallpaper preview" },
                     ) {
+                        val shown = current
                         if (shown != null) {
                             WallpaperImage(shown, prefs.wallpaperFit, prefs.wallpaperX, prefs.wallpaperY, Modifier.fillMaxSize())
                         } else {
                             DefaultWallpaper(Modifier.fillMaxSize())
                         }
                     }
-                    GlassButton("Change") { showWallpaper = true }
+                    Column(
+                        Modifier.widthIn(min = 170.dp, max = 230.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        GlassButton("Change wallpaper", primary = true, fullWidth = true) {
+                            choosing = true
+                            pickPhoto.launch("image/*")
+                        }
+                        GlassButton("Customize", fullWidth = true) { page = SettingsPage.WALLPAPER_CUSTOMIZE }
+                        GlassButton("Use default", enabled = current != null, fullWidth = true) {
+                            WallpaperStore.clear(context)
+                            prefs.bumpWallpaper()
+                        }
+                    }
                 }
-                RowDivider()
-                SettingBlock(Ico.image, Tiles.pink, "Fit", "Fill crops to cover the screen, Fit shows the whole photo, Stretch fills without keeping proportions") {
-                    Segmented(WallpaperFit.entries, prefs.wallpaperFit, { it.label }) { prefs.updateWallpaperFit(it) }
+                InfoText("Pick a photo, then drag it and pinch to zoom until it looks right, and tap Set.")
+            }
                 }
-                RowDivider()
-                SettingRow(Ico.image, Tiles.sky, "Position left / right", "Which part of the photo stays in view when it is cropped") {
-                    GlassSlider(
-                        value = prefs.wallpaperX,
-                        onValueChange = { prefs.updateWallpaperPosition(it, prefs.wallpaperY) },
-                        description = "Wallpaper horizontal position",
-                        modifier = Modifier.widthIn(max = 320.dp).weight(1f, fill = false),
-                    )
-                }
-                RowDivider()
-                SettingRow(Ico.image, Tiles.sky, "Position up / down") {
-                    GlassSlider(
-                        value = prefs.wallpaperY,
-                        onValueChange = { prefs.updateWallpaperPosition(prefs.wallpaperX, it) },
-                        description = "Wallpaper vertical position",
-                        modifier = Modifier.widthIn(max = 320.dp).weight(1f, fill = false),
-                    )
-                }
-                RowDivider()
+                SettingsPage.WALLPAPER_CUSTOMIZE -> {
+            Section("Customize wallpaper", prefs) {
                 SettingRow(Ico.drop, Tiles.graphite, "Dim", "Darkens the wallpaper so icons and text stand out") {
                     GlassSlider(
                         value = prefs.wallpaperDim,
@@ -425,9 +528,16 @@ fun SettingsScreen(
                         modifier = Modifier.widthIn(max = 320.dp).weight(1f, fill = false),
                     )
                 }
+                RowDivider()
+                SettingRow(Ico.sliders, Tiles.gray, "Reset adjustments", "Dim and blur go back to off. Your photo is kept.") {
+                    GlassButton("Reset") {
+                        prefs.updateWallpaperDim(0f)
+                        prefs.updateWallpaperBlur(0)
+                    }
+                }
             }
-
-            // ---- Keyboard and mouse -----------------------------------------------------------
+                }
+                SettingsPage.KEYBOARD -> {
             Section("Keyboard and mouse", prefs) {
                 SettingRow(
                     Ico.keyboard, Tiles.graphite, "Keyboard shortcuts",
@@ -436,8 +546,8 @@ fun SettingsScreen(
                     GlassSwitch(prefs.keyboardEnabled, { prefs.updateKeyboardEnabled(it) }, "Keyboard shortcuts")
                 }
             }
-
-            // ---- External devices and files ---------------------------------------------------
+                }
+                SettingsPage.DEVICES -> {
             Section("USB, OTG and files", prefs) {
                 SettingRow(
                     Ico.usb, Tiles.green, "OTG Shortcut",
@@ -452,8 +562,8 @@ fun SettingsScreen(
                     GlassButton("Storage") { openStorageSettings(context) }
                 }
             }
-
-            // ---- System and apps --------------------------------------------------------------
+                }
+                SettingsPage.SYSTEM -> {
             Section("System and apps", prefs) {
                 SettingRow(
                     Ico.exit, Tiles.blue, "Open apps in landscape",
@@ -509,20 +619,8 @@ fun SettingsScreen(
                     GlassButton("Open") { openLauncherChooser(context) }
                 }
             }
-
-            // ---- Privacy and permissions ------------------------------------------------------
-            Section("Privacy and permissions", prefs) {
-                InfoText(
-                    "Everything stays on this device. RishDesk has no internet permission, collects nothing and sends nothing.\n\n" +
-                        "Permissions it asks for, and why:\n" +
-                        "• Modify system settings: only to lock rotation to landscape for apps you open (optional).\n" +
-                        "• Network and Bluetooth state: to show Wi-Fi, mobile signal and Bluetooth icons in the status bar.\n" +
-                        "• Request delete packages: lets the Uninstall action show Android's confirmation.\n\n" +
-                        "Android does not let launchers float arbitrary apps, list other apps' running windows, or read which apps you used without a special usage-access permission, so those are not offered.",
-                )
-            }
-
-            // ---- Reset ------------------------------------------------------------------------
+                }
+                SettingsPage.RESET -> {
             Section("Reset", prefs) {
                 SettingRow(Ico.sliders, Tiles.graphite, "Appearance") {
                     GlassButton("Reset") { reset = ResetKind.APPEARANCE }
@@ -536,53 +634,49 @@ fun SettingsScreen(
                     GlassButton("Reset all") { reset = ResetKind.ALL }
                 }
             }
+                }
+                SettingsPage.PRIVACY -> {
+            Section("Privacy and permissions", prefs) {
+                InfoText(
+                    "Everything stays on this device. RishDesk has no internet permission, collects nothing and sends nothing.\n\n" +
+                        "Permissions it asks for, and why:\n" +
+                        "• Modify system settings: only to lock rotation to landscape for apps you open (optional).\n" +
+                        "• Network and Bluetooth state: to show Wi-Fi, mobile signal and Bluetooth icons in the status bar.\n" +
+                        "• Request delete packages: lets the Uninstall action show Android's confirmation.\n\n" +
+                        "Android does not let launchers float arbitrary apps, list other apps' running windows, or read which apps you used without a special usage-access permission, so those are not offered.",
+                )
+            }
+                }
+            }
             Spacer(Modifier.height(10.dp))
         }
     }
 
-    if (showWallpaper) {
-        WallpaperDialog(
-            preview = pending ?: current,
-            fit = prefs.wallpaperFit,
-            x = prefs.wallpaperX,
-            y = prefs.wallpaperY,
-            hasCustomWallpaper = current != null,
-            hasPending = pendingRaw != null,
-            onSelectPhoto = { pickPhoto.launch("image/*") },
-            onUseDefault = {
-                pending = null
-                pendingRaw = null
-                WallpaperStore.clear(context)
-                prefs.bumpWallpaper()
-                showWallpaper = false
-            },
-            onApply = {
-                val raw = pendingRaw
-                if (raw != null) {
-                    scope.launch {
-                        val saved = try {
-                            withContext(Dispatchers.IO) { WallpaperStore.save(context, raw) }
-                            true
-                        } catch (e: Exception) {
-                            false
-                        }
-                        if (saved) {
-                            pending = null
-                            pendingRaw = null
-                            prefs.bumpWallpaper()
-                            showWallpaper = false
-                        } else {
-                            android.widget.Toast.makeText(context, "Couldn't save the wallpaper", android.widget.Toast.LENGTH_SHORT).show()
-                        }
+    pendingRaw?.let { raw ->
+        WallpaperEditor(
+            photo = raw,
+            onSet = { cropped ->
+                scope.launch {
+                    val saved = try {
+                        withContext(Dispatchers.IO) { WallpaperStore.save(context, cropped) }
+                        true
+                    } catch (e: Exception) {
+                        false
+                    }
+                    if (saved) {
+                        // The saved picture is already cropped to the screen, so show it as is
+                        prefs.updateWallpaperFit(WallpaperFit.FILL)
+                        prefs.updateWallpaperPosition(0.5f, 0.5f)
+                        prefs.bumpWallpaper()
+                        pendingRaw = null
+                        android.widget.Toast.makeText(context, "Wallpaper set", android.widget.Toast.LENGTH_SHORT).show()
+                    } else {
+                        android.widget.Toast.makeText(context, "Couldn't save the wallpaper", android.widget.Toast.LENGTH_SHORT).show()
                     }
                 }
             },
-            onCancel = {
-                // Closing without Apply keeps the current wallpaper untouched
-                pending = null
-                pendingRaw = null
-                showWallpaper = false
-            },
+            // Closing without Set keeps the current wallpaper untouched
+            onCancel = { pendingRaw = null },
         )
     }
 
@@ -620,22 +714,14 @@ fun SettingsScreen(
 
 @Composable
 private fun Section(title: String, prefs: LauncherPrefs, content: @Composable ColumnScope.() -> Unit) {
-    Column {
-        Text(
-            title,
-            color = Color.White,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            style = LabelStyle,
-            modifier = Modifier.padding(start = 6.dp, bottom = 6.dp),
-        )
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .glass(RoundedCornerShape(22.dp), prefs.glassOpacity),
-            content = content,
-        )
-    }
+    // [title] is shown in the page header, so the card itself carries no heading
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .semantics { contentDescription = title }
+            .glass(RoundedCornerShape(22.dp), prefs.glassOpacity),
+        content = content,
+    )
 }
 
 @Composable
@@ -781,64 +867,5 @@ private fun SquareButton(label: String, onClick: () -> Unit, content: @Composabl
         contentAlignment = Alignment.Center,
     ) {
         content()
-    }
-}
-
-/** Wallpaper controls: pick a photo, preview it, then Apply, or go back to the default / cancel. */
-@Composable
-private fun WallpaperDialog(
-    preview: ImageBitmap?,
-    fit: WallpaperFit,
-    x: Float,
-    y: Float,
-    hasCustomWallpaper: Boolean,
-    hasPending: Boolean,
-    onSelectPhoto: () -> Unit,
-    onUseDefault: () -> Unit,
-    onApply: () -> Unit,
-    onCancel: () -> Unit,
-) {
-    Dialog(
-        onDismissRequest = onCancel,
-        properties = DialogProperties(usePlatformDefaultWidth = false),
-    ) {
-        val shape = RoundedCornerShape(24.dp)
-        Row(
-            Modifier
-                .fillMaxWidth(0.8f)
-                .background(Color(0xF2171A3F), shape)
-                .padding(20.dp),
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            val previewShape = RoundedCornerShape(14.dp)
-            Box(
-                Modifier
-                    .weight(1f)
-                    .aspectRatio(16f / 9f)
-                    .clip(previewShape)
-                    .border(1.dp, Color.White.copy(alpha = 0.5f), previewShape)
-                    .semantics {
-                        contentDescription =
-                            if (hasPending) "Selected wallpaper preview, not applied yet" else "Current wallpaper preview"
-                    },
-            ) {
-                if (preview != null) {
-                    WallpaperImage(preview, fit, x, y, Modifier.fillMaxSize())
-                } else {
-                    DefaultWallpaper(Modifier.fillMaxSize())
-                }
-            }
-            Column(
-                Modifier.widthIn(min = 150.dp, max = 200.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                PanelTitle("Wallpaper")
-                GlassButton("Select photo", fullWidth = true, onClick = onSelectPhoto)
-                GlassButton("Use default", enabled = hasCustomWallpaper || hasPending, fullWidth = true, onClick = onUseDefault)
-                GlassButton("Apply", primary = true, enabled = hasPending, fullWidth = true, onClick = onApply)
-                GlassButton("Cancel", fullWidth = true, onClick = onCancel)
-            }
-        }
     }
 }
