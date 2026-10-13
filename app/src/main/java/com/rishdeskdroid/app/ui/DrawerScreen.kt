@@ -72,7 +72,7 @@ import com.rishdeskdroid.app.data.uninstallApp
 import androidx.compose.runtime.withFrameNanos
 
 /**
- * The app drawer: search, filters (All / Favorites / Recent), sort order, and a paged grid whose
+ * The app drawer: search, filters (All / Favorites), A-Z order, and a paged grid whose
  * size comes from Settings. Tap empty space (or press back) to close it.
  */
 @Composable
@@ -88,7 +88,7 @@ fun DrawerScreen(
     val focusManager = LocalFocusManager.current
     var query by rememberSaveable { mutableStateOf("") }
     var filterIndex by rememberSaveable { mutableStateOf(0) }
-    val filter = DrawerFilter.entries[filterIndex.coerceIn(0, DrawerFilter.entries.size - 1)]
+    val filter = DrawerFilter.entries.filter { it != DrawerFilter.RECENT }.let { it[filterIndex.coerceIn(0, it.size - 1)] }
     val focusRequester = remember { FocusRequester() }
 
     val columns = prefs.drawerColumns
@@ -211,10 +211,9 @@ private fun DrawerHeader(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            DrawerFilter.entries.forEach { option ->
+            DrawerFilter.entries.filter { it != DrawerFilter.RECENT }.forEach { option ->
                 Chip(option.label, selected = option == filter) { onFilter(option) }
             }
-            SortChip(prefs)
         }
     }
 }
@@ -234,25 +233,6 @@ private fun Chip(text: String, selected: Boolean, onClick: () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         Text(text, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
-    }
-}
-
-@Composable
-private fun SortChip(prefs: LauncherPrefs) {
-    var open by remember { mutableStateOf(false) }
-    Box {
-        Chip("Sort: ${prefs.sortMode.label}", selected = false) { open = true }
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            SortMode.entries.forEach { mode ->
-                DropdownMenuItem(
-                    text = { Text(if (mode == prefs.sortMode) "✓ ${mode.label}" else mode.label) },
-                    onClick = {
-                        open = false
-                        prefs.updateSortMode(mode)
-                    },
-                )
-            }
-        }
     }
 }
 
