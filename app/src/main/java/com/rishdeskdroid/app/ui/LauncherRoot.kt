@@ -157,7 +157,7 @@ fun LauncherRoot(
                 )
             }
 
-            GreetingOverlay(enabled = prefs.showGreeting)
+            SplashOverlay()
         }
     }
 }
