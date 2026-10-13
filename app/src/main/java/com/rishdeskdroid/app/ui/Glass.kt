@@ -63,12 +63,24 @@ fun glassFillAlpha(opacity: Float): Float = 0.08f + 0.32f * opacity.coerceIn(0f,
  */
 fun Modifier.glass(shape: Shape, opacity: Float, dark: Boolean = false): Modifier {
     val o = opacity.coerceIn(0f, 1f)
+    // A soft vertical sheen (lighter at the top) and a bright rim that fades toward the bottom
+    // give the surface depth without hiding the wallpaper.
     val fill = if (dark) {
-        Color(0xFF0E1028).copy(alpha = 0.18f + 0.23f * o)
+        val a = 0.18f + 0.23f * o
+        Brush.verticalGradient(listOf(Color(0xFF1A1E48).copy(alpha = a + 0.06f), Color(0xFF0A0C22).copy(alpha = a)))
     } else {
-        Color.White.copy(alpha = glassFillAlpha(o))
+        val a = glassFillAlpha(o)
+        Brush.verticalGradient(
+            listOf(Color.White.copy(alpha = (a * 1.45f).coerceAtMost(0.8f)), Color.White.copy(alpha = a * 0.8f)),
+        )
     }
-    val edge = Color.White.copy(alpha = if (dark) 0.16f else 0.34f)
+    val edge = Brush.linearGradient(
+        listOf(
+            Color.White.copy(alpha = if (dark) 0.30f else 0.60f),
+            Color.White.copy(alpha = if (dark) 0.06f else 0.14f),
+            Color.White.copy(alpha = if (dark) 0.14f else 0.30f),
+        ),
+    )
     return this
         .shadow(
             elevation = 12.dp,
@@ -80,6 +92,15 @@ fun Modifier.glass(shape: Shape, opacity: Float, dark: Boolean = false): Modifie
         .clip(shape)
         .background(fill)
         .border(1.dp, edge, shape)
+        .drawBehind {
+            // Thin highlight along the very top edge, like light catching the glass
+            drawLine(
+                Color.White.copy(alpha = if (dark) 0.10f else 0.28f),
+                Offset(size.height * 0.2f, 1.5f),
+                Offset(size.width - size.height * 0.2f, 1.5f),
+                strokeWidth = 1f,
+            )
+        }
 }
 
 /** Dashed rounded outline, used for the "+" add-app tile. */

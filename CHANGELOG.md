@@ -2,6 +2,17 @@
 
 Notable changes to Rish Deskdroid are recorded here.
 
+## Unreleased
+
+### Changed
+- Settings is now a list of sections; each opens on its own page with a back button. Privacy and permissions is last.
+- Wallpaper has its own page with "Change wallpaper" and "Customize" (dim and blur). The old fit and position sliders are gone.
+- Choosing a wallpaper opens a full-screen editor: drag to move, pinch to zoom, then tap Set. The saved wallpaper is cropped exactly as you see it.
+- Glass surfaces and dialogs have a soft sheen and a bright rim.
+
+### Added
+- A welcome card with the Rish Innovations logo each time RishDesk starts (can be turned off in Appearance).
+
 ## 1.1.0 — 2026-10-11
 
 ### Changed
