@@ -18,4 +18,4 @@ RishDesk is a free, open-source Android launcher made by Rish Innovations. It is
 
 **Changes.** If this policy changes, the new version will be published in this repository with an updated date.
 
-**Contact.** Rish Innovations — open an issue at https://github.com/engineerharish05/Rish-Desk/issues or contact the maintainer through GitHub.
+**Contact.** Rish Innovations, rishinnovations@gmail.com, or open an issue at https://github.com/engineerharish05/Rish-Desk/issues or contact the maintainer through GitHub.
