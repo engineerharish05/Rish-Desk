@@ -17,6 +17,8 @@
 
 ## Download
 
+Website: **[rishinnovations.vercel.app/rishdesk](https://rishinnovations.vercel.app/rishdesk/)** (direct APK download).
+
 1. Open the [latest release](https://github.com/engineerharish05/Rish-Desk/releases/latest).
 2. Download `RishDesk-<version>.apk` (the `.sha256` file lets you verify it).
 3. Open the APK on your phone and allow installation from your browser or file manager if Android asks.
