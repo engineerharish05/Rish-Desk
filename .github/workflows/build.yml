@@ -27,7 +27,7 @@ jobs:
           distribution: temurin
           java-version: "17"
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
       - name: Build debug APK
@@ -55,7 +55,7 @@ jobs:
       - name: Verify Android SDK tools
         run: test -d "$ANDROID_HOME/build-tools" && test -d "$ANDROID_HOME/platforms"
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
       - name: Build release variant
