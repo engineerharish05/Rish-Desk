@@ -5,7 +5,7 @@ This guide explains where project files belong. It is documentation only: existi
 ## Top level
 
 ```text
-Rish-Deskdroid/
+Rish-Desk/
 ├── .github/
 │   ├── workflows/             # CI/build automation
 │   └── PULL_REQUEST_TEMPLATE.md

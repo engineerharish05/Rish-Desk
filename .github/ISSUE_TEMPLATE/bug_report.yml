@@ -1,0 +1,43 @@
+name: Bug report
+description: Something in RishDesk is not working as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open the drawer\n2. ..."
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: RishDesk version
+      description: The release you installed (see the GitHub Releases page)
+      placeholder: "1.1.0"
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and Android version
+      placeholder: "Realme C61, Android 16"
+    validations:
+      required: true
+  - type: dropdown
+    id: nav
+    attributes:
+      label: Navigation mode
+      options: [Gesture navigation, 3-button navigation, Not sure]
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots or logs
+      description: Drag images here. Do not include personal data.
