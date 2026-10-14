@@ -28,7 +28,7 @@ jobs:
       KS_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
       KEY_PASS: ${{ secrets.RELEASE_KEY_PASSWORD }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # A pushed tag builds that tag; a manual run builds the commit it was started on
           ref: ${{ github.event_name == 'push' && github.ref_name || github.sha }}
