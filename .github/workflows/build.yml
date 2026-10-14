@@ -33,7 +33,7 @@ jobs:
       - name: Build debug APK
         run: ./gradlew --no-daemon testDebugUnitTest assembleDebug
       - name: Upload debug APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: RishDesk-debug
           path: app/build/outputs/apk/debug/*.apk
@@ -87,7 +87,7 @@ jobs:
             "$UNSIGNED"
           "$APKSIGNER" verify --verbose "dist/RishDesk-1.1.0-preview.apk"
       - name: Upload release-preview APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: RishDesk-release-preview
           path: dist/RishDesk-1.1.0-preview.apk
