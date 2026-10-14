@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Existing tag to release (for example v1.1.0)"
+        description: "Version tag to create and release (for example v1.1.0); must match versionName"
         required: true
 
 permissions:
@@ -30,7 +30,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ env.TAG }}
+          # A pushed tag builds that tag; a manual run builds the commit it was started on
+          ref: ${{ github.event_name == 'push' && github.ref_name || github.sha }}
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -74,7 +75,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           NOTES="docs/releases/${TAG}.md"
-          ARGS=(--title "RishDesk ${VERSION}" --verify-tag)
+          ARGS=(--title "RishDesk ${VERSION}")
+          # Manual run: GitHub creates the tag on the built commit. Pushed tag: it must already exist.
+          if [ "${{ github.event_name }}" = "push" ]; then ARGS+=(--verify-tag); else ARGS+=(--target "$GITHUB_SHA"); fi
           if [ -f "$NOTES" ]; then ARGS+=(--notes-file "$NOTES"); else ARGS+=(--generate-notes); fi
           if [ "$PRERELEASE" = "true" ]; then ARGS+=(--prerelease); fi
           gh release create "$TAG" "${ARGS[@]}" \
