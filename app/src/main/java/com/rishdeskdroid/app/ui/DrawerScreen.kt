@@ -270,7 +270,8 @@ private fun AppPage(
             .padding(horizontal = 28.dp, vertical = 4.dp),
     ) {
         val cellHeight = maxHeight / rows
-        val labelSpace = if (prefs.showDrawerLabels) 24.dp else 8.dp
+        // The label needs 6dp gap + a 14sp line + 4dp padding; 32dp leaves a little air so it is never clipped by the next row
+        val labelSpace = if (prefs.showDrawerLabels) 32.dp else 8.dp
         val icon = (54.dp * prefs.drawerIconScale).coerceAtMost(cellHeight - labelSpace).coerceAtLeast(24.dp)
         Column(Modifier.fillMaxSize()) {
             for (row in 0 until rows) {
@@ -332,6 +333,7 @@ private fun DrawerApp(prefs: LauncherPrefs, allApps: List<AppInfo>, app: AppInfo
                     text = app.label,
                     color = Color.White,
                     fontSize = 12.sp,
+                    lineHeight = 14.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     textAlign = TextAlign.Center,
