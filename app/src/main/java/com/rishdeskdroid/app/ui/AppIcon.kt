@@ -32,7 +32,12 @@ fun rememberAppIcon(app: AppInfo): LoadedIcon? {
         key2 = app.activityName,
         key3 = version,
     ) {
-        if (value == null) {
+        // produceState keeps its previous value when the keys change, and grid cells are reused when
+        // the list changes (for example switching to Favorites). Always reset to this app's own icon
+        // so a reused cell can never keep showing another app's picture.
+        val cached = IconLoader.peek(app)
+        value = cached
+        if (cached == null) {
             value = withContext(Dispatchers.Default) {
                 IconLoader.load(context.packageManager, app)
             }
