@@ -1,6 +1,6 @@
 # RishDesk Privacy Policy
 
-_Last updated: 15 October 2026_
+_Last updated: 1 November 2026_
 
 RishDesk is a free, open-source Android launcher made by Rish Innovations. It is designed to work entirely on your device.
 
@@ -15,6 +15,8 @@ RishDesk is a free, open-source Android launcher made by Rish Innovations. It is
 - *Widgets:* when you add a widget, Android may ask for that widget's own permissions. The widget belongs to its app and follows that app's privacy policy.
 
 **Children.** RishDesk does not knowingly collect information from anyone, including children.
+
+**This website.** The Rish Innovations website does not use cookies, advertising or analytics, and its fonts are served from the site itself. If you pick a light or dark theme with the toggle in the header, that choice is saved only in your own browser. The RishDesk page asks GitHub which release is newest so the download buttons stay current; that request goes from your browser to GitHub. The site is hosted on Vercel, which, like any web host, may keep standard server logs of requests.
 
 **Changes.** If this policy changes, the new version will be published in this repository with an updated date.
 
